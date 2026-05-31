@@ -1,0 +1,678 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Protótipo: Agenda Semanal — Agendamento</title>
+
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Inter',-apple-system,sans-serif;background:#E8EAF6;min-height:100vh;display:flex;flex-direction:column;align-items:center;padding:24px 12px;gap:16px}
+:root{
+  --primary:#2563EB;--primary-dark:#1D4ED8;--primary-light:#EFF6FF;
+  --success:#16A34A;--success-light:#F0FDF4;
+  --warning:#D97706;--warning-light:#FFFBEB;
+  --danger:#DC2626;--danger-light:#FEF2F2;
+  --orange:#EA580C;--orange-light:#FFF7ED;
+  --n900:#111827;--n700:#374151;--n500:#6B7280;--n300:#D1D5DB;--n200:#E5E7EB;--n100:#F9FAFB;
+  --radius:12px;--radius-sm:8px;
+}
+/* Phone frame */
+.phone{width:390px;height:820px;background:white;border-radius:36px;box-shadow:0 24px 64px rgba(0,0,0,.25);overflow:hidden;position:relative;display:flex;flex-direction:column}
+/* Screen management */
+.screen{display:none;flex-direction:column;height:100%;overflow:hidden}
+.screen.active{display:flex}
+/* Header */
+.hdr{background:var(--primary);color:white;padding:14px 16px 14px;display:flex;align-items:center;gap:10px;flex-shrink:0;min-height:56px}
+.hdr-title{font-size:16px;font-weight:600;flex:1}
+.hdr-sub{font-size:12px;opacity:.8}
+.hdr-right{display:flex;gap:8px;align-items:center}
+.icon-btn{background:rgba(255,255,255,.15);border:none;color:white;width:32px;height:32px;border-radius:50%;cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center}
+/* Content */
+.content{flex:1;overflow-y:auto;background:#F9FAFB;padding:12px}
+/* Bottom nav */
+.bnav{background:white;border-top:1px solid var(--n200);display:flex;flex-shrink:0;padding-bottom:4px}
+.bnav-item{flex:1;display:flex;flex-direction:column;align-items:center;padding:8px 4px 10px;cursor:pointer;border:none;background:none;font-size:10px;font-weight:500;color:var(--n500);gap:3px;transition:.15s}
+.bnav-item.active{color:var(--primary)}
+.bnav-icon{font-size:20px}
+/* Week nav */
+.week-nav{display:flex;align-items:center;justify-content:space-between;background:white;border-radius:var(--radius);padding:10px 14px;margin-bottom:12px;box-shadow:0 1px 3px rgba(0,0,0,.07)}
+.week-label{font-size:14px;font-weight:600;color:var(--n900)}
+.week-btn{background:none;border:none;color:var(--primary);cursor:pointer;font-size:18px;padding:4px 8px}
+/* Status badge */
+.badge{display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:99px;font-size:11px;font-weight:600}
+.badge-draft{background:var(--warning-light);color:var(--warning)}
+.badge-confirmed{background:var(--success-light);color:var(--success)}
+.badge-orange{background:var(--orange-light);color:var(--orange)}
+/* Day section */
+.day-section{margin-bottom:12px}
+.day-label{font-size:12px;font-weight:700;color:var(--n500);text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px;padding:0 2px}
+/* Property card */
+.prop-card{background:white;border-radius:var(--radius-sm);padding:12px;margin-bottom:6px;box-shadow:0 1px 3px rgba(0,0,0,.07);border-left:3px solid var(--primary)}
+.prop-card.no-team{border-left-color:var(--orange)}
+.prop-card.confirmed{border-left-color:var(--success)}
+.prop-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:4px}
+.prop-name{font-size:13px;font-weight:600;color:var(--n900)}
+.prop-size{font-size:11px;font-weight:700;padding:2px 7px;border-radius:99px;background:var(--primary-light);color:var(--primary)}
+.prop-client{font-size:11px;color:var(--n500);margin-bottom:6px}
+.prop-addr{font-size:11px;color:var(--n700);margin-bottom:6px}
+.prop-team{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.team-chip{display:inline-flex;align-items:center;gap:4px;background:var(--n100);border:1px solid var(--n200);border-radius:99px;padding:2px 8px;font-size:11px;color:var(--n700)}
+.team-chip.leader{background:var(--primary-light);border-color:var(--primary);color:var(--primary)}
+.no-team-label{font-size:11px;color:var(--orange);font-style:italic}
+/* Banner */
+.banner{border-radius:var(--radius-sm);padding:10px 12px;margin-bottom:12px;font-size:12px;display:flex;gap:8px;align-items:flex-start}
+.banner-draft{background:var(--warning-light);color:var(--warning)}
+.banner-info{background:var(--primary-light);color:var(--primary-dark)}
+/* FAB */
+.fab{position:absolute;bottom:76px;right:16px;background:var(--primary);color:white;width:48px;height:48px;border-radius:50%;border:none;font-size:22px;cursor:pointer;box-shadow:0 4px 12px rgba(37,99,235,.4);display:flex;align-items:center;justify-content:center}
+/* Btn */
+.btn{border:none;border-radius:var(--radius-sm);padding:10px 18px;font-size:13px;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;gap:6px}
+.btn-primary{background:var(--primary);color:white}
+.btn-ghost{background:var(--n100);color:var(--n700);border:1px solid var(--n200)}
+.btn-danger{background:var(--danger);color:white}
+.btn-success{background:var(--success);color:white}
+.btn-full{width:100%;justify-content:center}
+.btn-sm{padding:6px 12px;font-size:12px}
+/* Assign screen */
+.assign-card{background:white;border-radius:var(--radius);padding:14px;margin-bottom:12px;box-shadow:0 1px 3px rgba(0,0,0,.07)}
+.assign-title{font-size:14px;font-weight:700;color:var(--n900);margin-bottom:2px}
+.assign-meta{font-size:11px;color:var(--n500);margin-bottom:12px}
+.assign-section{margin-bottom:10px}
+.assign-section-label{font-size:11px;font-weight:700;color:var(--n500);text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px}
+.member-option{display:flex;align-items:center;justify-content:space-between;padding:8px 10px;border-radius:var(--radius-sm);background:var(--n100);border:1px solid var(--n200);margin-bottom:4px;cursor:pointer}
+.member-option:hover{border-color:var(--primary);background:var(--primary-light)}
+.member-option.selected{border-color:var(--primary);background:var(--primary-light)}
+.member-option.unavail{opacity:.45;cursor:not-allowed}
+.member-name{font-size:12px;font-weight:500;color:var(--n900)}
+.member-tag{font-size:10px;padding:1px 6px;border-radius:99px;font-weight:600}
+.tag-leader{background:var(--primary-light);color:var(--primary)}
+.tag-aux{background:var(--n200);color:var(--n500)}
+.tag-unavail{background:var(--danger-light);color:var(--danger)}
+.role-select{font-size:11px;border:1px solid var(--n300);border-radius:6px;padding:2px 6px;background:white;color:var(--n700)}
+/* Form elements */
+.form-group{margin-bottom:14px}
+.form-label{font-size:12px;font-weight:600;color:var(--n700);margin-bottom:5px;display:block}
+.required{color:var(--danger)}
+.form-input{width:100%;border:1.5px solid var(--n300);border-radius:var(--radius-sm);padding:9px 12px;font-size:13px;font-family:inherit;color:var(--n900);outline:none}
+.form-input:focus{border-color:var(--primary)}
+.form-select{width:100%;border:1.5px solid var(--n300);border-radius:var(--radius-sm);padding:9px 12px;font-size:13px;font-family:inherit;color:var(--n900);background:white;outline:none}
+/* My agenda (member view) */
+.my-item{background:white;border-radius:var(--radius);padding:14px;margin-bottom:10px;box-shadow:0 1px 3px rgba(0,0,0,.07)}
+.my-date-sep{font-size:12px;font-weight:700;color:var(--primary);padding:8px 0 4px;text-transform:uppercase}
+.my-item-name{font-size:14px;font-weight:700;color:var(--n900);margin-bottom:2px}
+.my-item-client{font-size:12px;color:var(--n500);margin-bottom:6px}
+.my-item-addr{font-size:12px;color:var(--n700);margin-bottom:6px;display:flex;gap:5px;align-items:flex-start}
+.my-item-obs{font-size:11px;color:var(--n500);background:var(--n100);border-radius:6px;padding:6px 8px;font-style:italic}
+.my-role{display:inline-flex;padding:2px 8px;border-radius:99px;font-size:11px;font-weight:600}
+.my-role-leader{background:var(--primary-light);color:var(--primary)}
+.my-role-aux{background:var(--n100);color:var(--n500)}
+/* Modal overlay */
+.modal-overlay{position:absolute;inset:0;background:rgba(0,0,0,.5);display:flex;align-items:flex-end;z-index:100}
+.modal-sheet{background:white;border-radius:20px 20px 0 0;padding:20px 16px 28px;width:100%}
+.modal-title{font-size:16px;font-weight:700;color:var(--n900);margin-bottom:6px}
+.modal-desc{font-size:13px;color:var(--n500);margin-bottom:20px}
+.modal-actions{display:flex;flex-direction:column;gap:8px}
+/* Toast */
+.toast{position:absolute;top:72px;left:12px;right:12px;background:var(--success);color:white;border-radius:var(--radius-sm);padding:12px 14px;font-size:13px;font-weight:500;z-index:200;display:flex;align-items:center;gap:8px;box-shadow:0 4px 12px rgba(0,0,0,.15);animation:slideDown .3s ease}
+@keyframes slideDown{from{transform:translateY(-20px);opacity:0}to{transform:translateY(0);opacity:1}}
+/* Generate screen */
+.gen-day{background:white;border-radius:var(--radius);margin-bottom:10px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,.07)}
+.gen-day-header{background:var(--primary);color:white;padding:8px 12px;font-size:12px;font-weight:700;display:flex;justify-content:space-between;align-items:center}
+.gen-day-count{font-size:11px;opacity:.8}
+.gen-item{display:flex;align-items:center;padding:10px 12px;border-bottom:1px solid var(--n100);gap:10px}
+.gen-item:last-child{border-bottom:none}
+.gen-remove{background:none;border:none;color:var(--danger);cursor:pointer;font-size:16px;padding:2px}
+.gen-drag{color:var(--n300);font-size:14px;cursor:grab}
+/* Confirm bar */
+.confirm-bar{background:white;border-top:1px solid var(--n200);padding:10px 12px;display:flex;gap:8px;flex-shrink:0}
+/* Proto badge */
+.proto-badge{position:fixed;top:8px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,.7);color:white;padding:5px 14px;border-radius:99px;font-size:11px;z-index:999;pointer-events:none;backdrop-filter:blur(8px)}
+/* Screen nav helper */
+.screen-nav{background:white;border-radius:var(--radius);padding:10px 12px;margin-bottom:12px;font-size:11px;color:var(--n500)}
+.screen-nav strong{color:var(--n700)}
+</style>
+</head>
+<body>
+
+<div class="proto-badge">🔲 PROTÓTIPO — Fluxo: Agenda Semanal</div>
+
+<div class="phone">
+
+  <!-- ═══════════════════════════════════════════
+       TELA 1 — Visualizar Agenda (Gerente) — CONFIRMADA
+  ═══════════════════════════════════════════ -->
+  <div id="s-agenda" class="screen active">
+    <div class="hdr">
+      <span class="hdr-title">CleanSched</span>
+      <div class="hdr-right">
+        <span class="badge badge-confirmed">✓ Confirmada</span>
+        <button class="icon-btn" onclick="show('s-member')" title="Ver como membro">👤</button>
+      </div>
+    </div>
+    <div class="content">
+      <div class="week-nav">
+        <button class="week-btn">‹</button>
+        <div style="text-align:center">
+          <div class="week-label">08 – 12 Jun 2026</div>
+          <div style="font-size:11px;color:var(--n500)">Semana atual</div>
+        </div>
+        <button class="week-btn" onclick="show('s-no-agenda')">›</button>
+      </div>
+
+      <div class="day-section">
+        <div class="day-label">Segunda · 08/06</div>
+        <div class="prop-card confirmed">
+          <div class="prop-top"><span class="prop-name">Casa da Maria — Oak St</span><span class="prop-size">M</span></div>
+          <div class="prop-client">Maria Johnson · (305) 555-1234</div>
+          <div class="prop-addr">📍 1234 Oak St, Miami, FL 33101</div>
+          <div class="prop-team"><span class="team-chip leader">👑 Ana Oliveira</span><span class="team-chip">Carol Santos</span></div>
+        </div>
+        <div class="prop-card confirmed">
+          <div class="prop-top"><span class="prop-name">Casa da Sarah — Pine Ave</span><span class="prop-size">G</span></div>
+          <div class="prop-client">Sarah Johnson · (786) 555-9876</div>
+          <div class="prop-addr">📍 567 Pine Ave, Miami, FL 33102</div>
+          <div class="prop-team"><span class="team-chip leader">👑 Ana Oliveira</span><span class="team-chip">Jessica Lima (Helper)</span></div>
+        </div>
+      </div>
+
+      <div class="day-section">
+        <div class="day-label">Terça · 09/06</div>
+        <div class="prop-card confirmed">
+          <div class="prop-top"><span class="prop-name">Casa da Karen — Elm Rd</span><span class="prop-size">P</span></div>
+          <div class="prop-client">Karen Williams · (305) 555-4455</div>
+          <div class="prop-addr">📍 89 Elm Rd, Hialeah, FL 33010</div>
+          <div class="prop-team"><span class="team-chip leader">👑 Carol Santos</span></div>
+        </div>
+        <div class="prop-card confirmed">
+          <div class="prop-top"><span class="prop-name">Casa da Emily — Coral Way</span><span class="prop-size">M</span></div>
+          <div class="prop-client">Emily Torres · (786) 555-3311</div>
+          <div class="prop-addr">📍 2200 Coral Way, Miami, FL 33145</div>
+          <div class="prop-team"><span class="team-chip leader">👑 Carol Santos</span><span class="team-chip">Ana Oliveira</span></div>
+        </div>
+      </div>
+
+      <div class="day-section">
+        <div class="day-label">Quarta · 10/06</div>
+        <div class="prop-card confirmed">
+          <div class="prop-top"><span class="prop-name">Casa do Robert — Bay Dr</span><span class="prop-size">G</span></div>
+          <div class="prop-client">Robert Davis · (305) 555-7788</div>
+          <div class="prop-addr">📍 400 Bay Dr, Miami Beach, FL 33139</div>
+          <div class="prop-team"><span class="team-chip leader">👑 Ana Oliveira</span><span class="team-chip">Carol Santos</span><span class="team-chip">Jessica Lima (Helper)</span></div>
+        </div>
+      </div>
+
+      <div class="day-section">
+        <div class="day-label">Quinta · 11/06</div>
+        <div class="prop-card confirmed">
+          <div class="prop-top"><span class="prop-name">Casa da Linda — SW 8th</span><span class="prop-size">M</span></div>
+          <div class="prop-client">Linda Brown · (786) 555-2244</div>
+          <div class="prop-addr">📍 1500 SW 8th St, Miami, FL 33135</div>
+          <div class="prop-team"><span class="team-chip leader">👑 Carol Santos</span></div>
+        </div>
+      </div>
+
+      <div style="height:12px"></div>
+
+      <button class="btn btn-ghost btn-full btn-sm" onclick="showModal('modal-reopen')">🔓 Reabrir Agenda</button>
+
+      <div style="height:8px"></div>
+      <button class="btn btn-ghost btn-full btn-sm" onclick="copyWA()">📋 Copiar para WhatsApp</button>
+    </div>
+    <div class="bnav">
+      <button class="bnav-item active"><span class="bnav-icon">📅</span>Agenda</button>
+      <button class="bnav-item" onclick="show('s-clients')"><span class="bnav-icon">🏠</span>Clientes</button>
+      <button class="bnav-item" onclick="show('s-team-list')"><span class="bnav-icon">👥</span>Equipe</button>
+      <button class="bnav-item"><span class="bnav-icon">⚙️</span>Menu</button>
+    </div>
+    <!-- Modal reopen -->
+    <div id="modal-reopen" class="modal-overlay" style="display:none" onclick="hideModal('modal-reopen')">
+      <div class="modal-sheet" onclick="event.stopPropagation()">
+        <div class="modal-title">Reabrir agenda?</div>
+        <div class="modal-desc">A agenda voltará para Rascunho e poderá ser editada novamente.</div>
+        <div class="modal-actions">
+          <button class="btn btn-warning btn-full" onclick="hideModal('modal-reopen');show('s-draft')" style="background:var(--warning);color:white">Sim, reabrir</button>
+          <button class="btn btn-ghost btn-full" onclick="hideModal('modal-reopen')">Cancelar</button>
+        </div>
+      </div>
+    </div>
+    <!-- Toast WA -->
+    <div id="toast-wa" class="toast" style="display:none">✅ Texto da agenda copiado!</div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════
+       TELA 2 — Sem agenda (semana próxima)
+  ═══════════════════════════════════════════ -->
+  <div id="s-no-agenda" class="screen">
+    <div class="hdr">
+      <span class="hdr-title">CleanSched</span>
+    </div>
+    <div class="content">
+      <div class="week-nav">
+        <button class="week-btn" onclick="show('s-agenda')">‹</button>
+        <div style="text-align:center">
+          <div class="week-label">15 – 19 Jun 2026</div>
+          <div style="font-size:11px;color:var(--n500)">Próxima semana</div>
+        </div>
+        <button class="week-btn">›</button>
+      </div>
+      <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:60%;gap:16px;padding:20px">
+        <div style="font-size:56px">📭</div>
+        <div style="font-size:16px;font-weight:700;color:var(--n900);text-align:center">Agenda não gerada</div>
+        <div style="font-size:13px;color:var(--n500);text-align:center;line-height:1.5">A agenda desta semana ainda não foi criada. Clique em Gerar para que o sistema sugira os imóveis automaticamente.</div>
+        <button class="btn btn-primary" onclick="show('s-generate')" style="margin-top:8px">⚡ Gerar Agenda</button>
+      </div>
+    </div>
+    <div class="bnav">
+      <button class="bnav-item active"><span class="bnav-icon">📅</span>Agenda</button>
+      <button class="bnav-item"><span class="bnav-icon">🏠</span>Clientes</button>
+      <button class="bnav-item"><span class="bnav-icon">👥</span>Equipe</button>
+      <button class="bnav-item"><span class="bnav-icon">⚙️</span>Menu</button>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════
+       TELA 3 — Gerar Agenda (revisar sugestão)
+  ═══════════════════════════════════════════ -->
+  <div id="s-generate" class="screen">
+    <div class="hdr">
+      <button class="icon-btn" onclick="show('s-no-agenda')">←</button>
+      <div>
+        <div class="hdr-title">Revisar Agenda</div>
+        <div class="hdr-sub">15–19/06/2026 · Rascunho</div>
+      </div>
+    </div>
+    <div class="content">
+      <div class="banner banner-info">ℹ️ <span>O sistema sugeriu <strong>9 imóveis</strong> com base nas frequências. Você pode mover, adicionar ou remover antes de salvar.</span></div>
+
+      <div class="gen-day">
+        <div class="gen-day-header"><span>Segunda · 15/06</span><span class="gen-day-count">3 casas</span></div>
+        <div class="gen-item"><span class="gen-drag">⠿</span><div style="flex:1"><div class="prop-name" style="font-size:12px">Casa da Sarah — Pine Ave</div><div style="font-size:11px;color:var(--n500)">Sarah Johnson · G · Semanal</div></div><button class="gen-remove" title="Remover">✕</button></div>
+        <div class="gen-item"><span class="gen-drag">⠿</span><div style="flex:1"><div class="prop-name" style="font-size:12px">Casa da Maria — Oak St</div><div style="font-size:11px;color:var(--n500)">Maria Johnson · M · Semanal</div></div><button class="gen-remove" title="Remover">✕</button></div>
+        <div class="gen-item"><span class="gen-drag">⠿</span><div style="flex:1"><div class="prop-name" style="font-size:12px">Casa da Karen — Elm Rd</div><div style="font-size:11px;color:var(--n500)">Karen Williams · P · Quinzenal</div></div><button class="gen-remove" title="Remover">✕</button></div>
+      </div>
+
+      <div class="gen-day">
+        <div class="gen-day-header"><span>Terça · 16/06</span><span class="gen-day-count">2 casas</span></div>
+        <div class="gen-item"><span class="gen-drag">⠿</span><div style="flex:1"><div class="prop-name" style="font-size:12px">Casa da Emily — Coral Way</div><div style="font-size:11px;color:var(--n500)">Emily Torres · M · Semanal</div></div><button class="gen-remove" title="Remover">✕</button></div>
+        <div class="gen-item"><span class="gen-drag">⠿</span><div style="flex:1"><div class="prop-name" style="font-size:12px">Casa do Robert — Bay Dr</div><div style="font-size:11px;color:var(--n500)">Robert Davis · G · Semanal</div></div><button class="gen-remove" title="Remover">✕</button></div>
+      </div>
+
+      <div class="gen-day">
+        <div class="gen-day-header"><span>Quarta · 17/06</span><span class="gen-day-count">2 casas</span></div>
+        <div class="gen-item"><span class="gen-drag">⠿</span><div style="flex:1"><div class="prop-name" style="font-size:12px">Casa da Linda — SW 8th</div><div style="font-size:11px;color:var(--n500)">Linda Brown · M · Semanal</div></div><button class="gen-remove" title="Remover">✕</button></div>
+        <div class="gen-item"><span class="gen-drag">⠿</span><div style="flex:1"><div class="prop-name" style="font-size:12px">Casa da Jennifer — NW 2nd</div><div style="font-size:11px;color:var(--n500)">Jennifer Clark · P · Mensal</div></div><button class="gen-remove" title="Remover">✕</button></div>
+      </div>
+
+      <div class="gen-day">
+        <div class="gen-day-header"><span>Quinta · 18/06</span><span class="gen-day-count">2 casas</span></div>
+        <div class="gen-item"><span class="gen-drag">⠿</span><div style="flex:1"><div class="prop-name" style="font-size:12px">Casa da Patricia — Brickell</div><div style="font-size:11px;color:var(--n500)">Patricia Moore · G · Quinzenal</div></div><button class="gen-remove" title="Remover">✕</button></div>
+        <div class="gen-item"><span class="gen-drag">⠿</span><div style="flex:1"><div class="prop-name" style="font-size:12px">Casa da Helen — Key Biscayne</div><div style="font-size:11px;color:var(--n500)">Helen Martin · M · Semanal</div></div><button class="gen-remove" title="Remover">✕</button></div>
+      </div>
+
+      <div style="height:8px"></div>
+      <button class="btn btn-ghost btn-full btn-sm">+ Adicionar imóvel</button>
+    </div>
+    <div class="confirm-bar">
+      <button class="btn btn-ghost" onclick="show('s-no-agenda')" style="flex:1">Cancelar</button>
+      <button class="btn btn-primary" onclick="show('s-draft')" style="flex:2">Salvar Rascunho →</button>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════
+       TELA 4 — Agenda em Rascunho (atribuir equipe)
+  ═══════════════════════════════════════════ -->
+  <div id="s-draft" class="screen">
+    <div class="hdr">
+      <span class="hdr-title">CleanSched</span>
+      <div class="hdr-right">
+        <span class="badge badge-draft">Rascunho</span>
+      </div>
+    </div>
+    <div class="content">
+      <div class="week-nav">
+        <button class="week-btn">‹</button>
+        <div style="text-align:center">
+          <div class="week-label">15 – 19 Jun 2026</div>
+        </div>
+        <button class="week-btn">›</button>
+      </div>
+
+      <div class="banner banner-draft">⚠️ <span><strong>Rascunho</strong> — Atribua a equipe para confirmar a agenda.</span></div>
+
+      <div class="day-section">
+        <div class="day-label">Segunda · 15/06</div>
+        <div class="prop-card no-team" onclick="show('s-assign')">
+          <div class="prop-top"><span class="prop-name">Casa da Sarah — Pine Ave</span><span class="prop-size">G</span></div>
+          <div class="prop-client">Sarah Johnson</div>
+          <div class="prop-team"><span class="no-team-label">⚠ Sem equipe · Toque para atribuir</span></div>
+        </div>
+        <div class="prop-card no-team">
+          <div class="prop-top"><span class="prop-name">Casa da Maria — Oak St</span><span class="prop-size">M</span></div>
+          <div class="prop-client">Maria Johnson</div>
+          <div class="prop-team"><span class="no-team-label">⚠ Sem equipe · Toque para atribuir</span></div>
+        </div>
+        <div class="prop-card" style="border-left-color:var(--success)">
+          <div class="prop-top"><span class="prop-name">Casa da Karen — Elm Rd</span><span class="prop-size">P</span></div>
+          <div class="prop-client">Karen Williams</div>
+          <div class="prop-team"><span class="team-chip leader">👑 Carol Santos</span></div>
+        </div>
+      </div>
+
+      <div class="day-section">
+        <div class="day-label">Terça · 16/06</div>
+        <div class="prop-card no-team">
+          <div class="prop-top"><span class="prop-name">Casa da Emily — Coral Way</span><span class="prop-size">M</span></div>
+          <div class="prop-client">Emily Torres</div>
+          <div class="prop-team"><span class="no-team-label">⚠ Sem equipe · Toque para atribuir</span></div>
+        </div>
+        <div class="prop-card no-team">
+          <div class="prop-top"><span class="prop-name">Casa do Robert — Bay Dr</span><span class="prop-size">G</span></div>
+          <div class="prop-client">Robert Davis</div>
+          <div class="prop-team"><span class="no-team-label">⚠ Sem equipe · Toque para atribuir</span></div>
+        </div>
+      </div>
+    </div>
+    <div class="confirm-bar">
+      <button class="btn btn-ghost btn-sm" onclick="show('s-generate')">← Editar itens</button>
+      <button class="btn btn-success btn-sm" onclick="showModal('modal-confirm')" style="flex:1;justify-content:center">✓ Confirmar Agenda</button>
+    </div>
+    <div class="bnav">
+      <button class="bnav-item active"><span class="bnav-icon">📅</span>Agenda</button>
+      <button class="bnav-item"><span class="bnav-icon">🏠</span>Clientes</button>
+      <button class="bnav-item"><span class="bnav-icon">👥</span>Equipe</button>
+      <button class="bnav-item"><span class="bnav-icon">⚙️</span>Menu</button>
+    </div>
+    <!-- Modal: bloqueio por sem líder -->
+    <div id="modal-confirm" class="modal-overlay" style="display:none" onclick="hideModal('modal-confirm')">
+      <div class="modal-sheet" onclick="event.stopPropagation()">
+        <div class="modal-title">⚠️ Atribuição incompleta</div>
+        <div class="modal-desc">Alguns imóveis ainda não têm líder atribuído:<br><br>• Casa da Sarah — Pine Ave<br>• Casa da Maria — Oak St<br>• Casa da Emily — Coral Way<br>• Casa do Robert — Bay Dr</div>
+        <div class="modal-actions">
+          <button class="btn btn-ghost btn-full" onclick="hideModal('modal-confirm')">Voltar e atribuir</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════
+       TELA 5 — Atribuir Equipe (um imóvel)
+  ═══════════════════════════════════════════ -->
+  <div id="s-assign" class="screen">
+    <div class="hdr">
+      <button class="icon-btn" onclick="show('s-draft')">←</button>
+      <div>
+        <div class="hdr-title">Atribuir Equipe</div>
+        <div class="hdr-sub">Casa da Sarah · Seg 15/06</div>
+      </div>
+    </div>
+    <div class="content">
+      <div class="assign-card">
+        <div class="assign-title">Casa da Sarah — Pine Ave</div>
+        <div class="assign-meta">Sarah Johnson · G · 567 Pine Ave, Miami</div>
+
+        <div class="assign-section">
+          <div class="assign-section-label">Membros disponíveis em 15/06</div>
+          <div class="member-option selected" onclick="this.classList.toggle('selected')">
+            <div>
+              <div class="member-name">Ana Oliveira</div>
+              <span class="member-tag tag-leader">Fixa</span>
+            </div>
+            <select class="role-select"><option>Líder</option><option>Auxiliar</option></select>
+          </div>
+          <div class="member-option" onclick="this.classList.toggle('selected')">
+            <div>
+              <div class="member-name">Carol Santos</div>
+              <span class="member-tag tag-aux">Fixa</span>
+            </div>
+            <select class="role-select"><option>Auxiliar</option><option>Líder</option></select>
+          </div>
+        </div>
+
+        <div class="assign-section">
+          <div class="assign-section-label">Indisponíveis em 15/06</div>
+          <div class="member-option unavail">
+            <div>
+              <div class="member-name">Lucia Ferreira</div>
+              <span class="member-tag tag-unavail">Indisponível — Consulta médica</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="assign-section">
+          <div class="assign-section-label">Helpers</div>
+          <div class="member-option" onclick="this.classList.toggle('selected')">
+            <div>
+              <div class="member-name">Jessica Lima</div>
+              <span class="member-tag" style="background:var(--warning-light);color:var(--warning)">Helper</span>
+            </div>
+            <select class="role-select"><option>Auxiliar</option><option>Líder</option></select>
+          </div>
+        </div>
+      </div>
+
+      <div class="banner banner-info" style="margin-top:0">ℹ️ <span>Lucia está indisponível (consulta médica). Considere adicionar uma helper.</span></div>
+    </div>
+    <div class="confirm-bar">
+      <button class="btn btn-ghost" onclick="show('s-draft')" style="flex:1">Cancelar</button>
+      <button class="btn btn-primary" onclick="show('s-draft')" style="flex:2">Salvar Atribuição</button>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════
+       TELA 6 — Minha Agenda (visão Membro)
+  ═══════════════════════════════════════════ -->
+  <div id="s-member" class="screen">
+    <div class="hdr">
+      <span class="hdr-title">Minha Agenda</span>
+      <div class="hdr-right">
+        <button class="icon-btn" onclick="show('s-agenda')" title="Voltar (Gerente)">🔄</button>
+      </div>
+    </div>
+    <div class="content">
+      <div style="background:var(--primary-light);border-radius:var(--radius-sm);padding:10px 12px;margin-bottom:14px;display:flex;align-items:center;gap:8px">
+        <div style="width:32px;height:32px;background:var(--primary);border-radius:50%;display:flex;align-items:center;justify-content:center;color:white;font-size:14px;font-weight:700;flex-shrink:0">A</div>
+        <div>
+          <div style="font-size:13px;font-weight:600;color:var(--n900)">Ana Oliveira</div>
+          <div style="font-size:11px;color:var(--n500)">Semana de 08–12 Jun 2026</div>
+        </div>
+      </div>
+
+      <div class="my-date-sep">Segunda · 08/06</div>
+      <div class="my-item">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:2px">
+          <div class="my-item-name">Casa da Maria — Oak St</div>
+          <span class="my-role my-role-leader">👑 Líder</span>
+        </div>
+        <div class="my-item-client">Maria Johnson · (305) 555-1234</div>
+        <div class="my-item-addr">📍 <span>1234 Oak St, Miami, FL 33101</span></div>
+        <div style="font-size:11px;color:var(--n500);margin-bottom:6px">Tamanho: M · Equipe: Carol Santos</div>
+      </div>
+      <div class="my-item">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:2px">
+          <div class="my-item-name">Casa da Sarah — Pine Ave</div>
+          <span class="my-role my-role-leader">👑 Líder</span>
+        </div>
+        <div class="my-item-client">Sarah Johnson · (786) 555-9876</div>
+        <div class="my-item-addr">📍 <span>567 Pine Ave, Miami, FL 33102</span></div>
+        <div style="font-size:11px;color:var(--n500);margin-bottom:6px">Tamanho: G · Equipe: Jessica Lima (Helper)</div>
+        <div class="my-item-obs">🔑 Chave com a vizinha, Apt 2B. Cachorro no quintal — não abrir o portão.</div>
+      </div>
+
+      <div class="my-date-sep">Quarta · 10/06</div>
+      <div class="my-item">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:2px">
+          <div class="my-item-name">Casa do Robert — Bay Dr</div>
+          <span class="my-role my-role-leader">👑 Líder</span>
+        </div>
+        <div class="my-item-client">Robert Davis · (305) 555-7788</div>
+        <div class="my-item-addr">📍 <span>400 Bay Dr, Miami Beach, FL 33139</span></div>
+        <div style="font-size:11px;color:var(--n500);margin-bottom:6px">Tamanho: G · Equipe: Carol Santos, Jessica Lima</div>
+      </div>
+
+      <div style="height:12px"></div>
+      <button class="btn btn-ghost btn-full btn-sm" onclick="show('s-avail')">📅 Registrar Disponibilidade</button>
+    </div>
+    <div class="bnav">
+      <button class="bnav-item active"><span class="bnav-icon">📅</span>Agenda</button>
+      <button class="bnav-item"><span class="bnav-icon">📆</span>Disponib.</button>
+      <button class="bnav-item"><span class="bnav-icon">👤</span>Perfil</button>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════
+       TELA 7 — Disponibilidade (membro)
+  ═══════════════════════════════════════════ -->
+  <div id="s-avail" class="screen">
+    <div class="hdr">
+      <button class="icon-btn" onclick="show('s-member')">←</button>
+      <div class="hdr-title">Minha Disponibilidade</div>
+    </div>
+    <div class="content">
+      <div style="background:white;border-radius:var(--radius);padding:14px;margin-bottom:12px;box-shadow:0 1px 3px rgba(0,0,0,.07)">
+        <div style="font-size:12px;font-weight:700;color:var(--n500);text-transform:uppercase;letter-spacing:.05em;margin-bottom:10px">Jun 2026</div>
+        <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:4px;text-align:center">
+          <div style="font-size:10px;color:var(--n500);font-weight:700;padding:2px">D</div>
+          <div style="font-size:10px;color:var(--n500);font-weight:700;padding:2px">S</div>
+          <div style="font-size:10px;color:var(--n500);font-weight:700;padding:2px">T</div>
+          <div style="font-size:10px;color:var(--n500);font-weight:700;padding:2px">Q</div>
+          <div style="font-size:10px;color:var(--n500);font-weight:700;padding:2px">Q</div>
+          <div style="font-size:10px;color:var(--n500);font-weight:700;padding:2px">S</div>
+          <div style="font-size:10px;color:var(--n500);font-weight:700;padding:2px">S</div>
+          <!-- week 1 -->
+          <div style="font-size:12px;color:var(--n300);padding:6px">1</div>
+          <div class="cal-day avail" onclick="selectDay(this,'2')">2</div>
+          <div class="cal-day avail" onclick="selectDay(this,'3')">3</div>
+          <div class="cal-day avail" onclick="selectDay(this,'4')">4</div>
+          <div class="cal-day avail" onclick="selectDay(this,'5')">5</div>
+          <div class="cal-day avail" onclick="selectDay(this,'6')">6</div>
+          <div style="font-size:12px;color:var(--n300);padding:6px">7</div>
+          <!-- week 2 -->
+          <div style="font-size:12px;color:var(--n300);padding:6px">8</div>
+          <div class="cal-day avail today" onclick="selectDay(this,'9')">9</div>
+          <div class="cal-day avail" onclick="selectDay(this,'10')">10</div>
+          <div class="cal-day unavail" onclick="selectDay(this,'11')">11</div>
+          <div class="cal-day avail" onclick="selectDay(this,'12')">12</div>
+          <div class="cal-day avail" onclick="selectDay(this,'13')">13</div>
+          <div style="font-size:12px;color:var(--n300);padding:6px">14</div>
+          <!-- week 3 -->
+          <div style="font-size:12px;color:var(--n300);padding:6px">15</div>
+          <div class="cal-day avail" onclick="selectDay(this,'16')">16</div>
+          <div class="cal-day avail" onclick="selectDay(this,'17')">17</div>
+          <div class="cal-day avail" onclick="selectDay(this,'18')">18</div>
+          <div class="cal-day avail" onclick="selectDay(this,'19')">19</div>
+          <div class="cal-day avail" onclick="selectDay(this,'20')">20</div>
+          <div style="font-size:12px;color:var(--n300);padding:6px">21</div>
+        </div>
+        <div style="display:flex;gap:12px;margin-top:12px;font-size:11px;color:var(--n500);padding:0 4px">
+          <span>🟢 Disponível</span>
+          <span>🔴 Indisponível</span>
+          <span>⬜ Sem registro</span>
+        </div>
+      </div>
+      <!-- Day panel -->
+      <div id="day-panel" style="display:none;background:white;border-radius:var(--radius);padding:14px;box-shadow:0 1px 3px rgba(0,0,0,.07)">
+        <div style="font-size:13px;font-weight:700;color:var(--n900);margin-bottom:12px">📅 <span id="day-label">Jun 2026</span></div>
+        <div class="form-group">
+          <label class="form-label">Status</label>
+          <div style="display:flex;gap:8px">
+            <button class="btn btn-sm" style="flex:1;background:var(--success-light);color:var(--success);border:2px solid var(--success)">✅ Disponível</button>
+            <button class="btn btn-sm" style="flex:1;background:var(--n100);color:var(--n500);border:1px solid var(--n200)">❌ Indisponível</button>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="motivo">Motivo (opcional)</label>
+          <input id="motivo" class="form-input" placeholder="Ex: consulta médica, viagem...">
+        </div>
+        <button class="btn btn-primary btn-full">Salvar</button>
+      </div>
+    </div>
+    <div class="bnav">
+      <button class="bnav-item" onclick="show('s-member')"><span class="bnav-icon">📅</span>Agenda</button>
+      <button class="bnav-item active"><span class="bnav-icon">📆</span>Disponib.</button>
+      <button class="bnav-item"><span class="bnav-icon">👤</span>Perfil</button>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════
+       PLACEHOLDER: Clientes e Equipe
+  ═══════════════════════════════════════════ -->
+  <div id="s-clients" class="screen">
+    <div class="hdr"><button class="icon-btn" onclick="show('s-agenda')">←</button><span class="hdr-title">Clientes</span></div>
+    <div class="content"><div style="text-align:center;padding:40px 20px;color:var(--n500)">Ver protótipo completo:<br><strong>gestao-clientes/flow.html</strong></div></div>
+    <div class="bnav">
+      <button class="bnav-item" onclick="show('s-agenda')"><span class="bnav-icon">📅</span>Agenda</button>
+      <button class="bnav-item active"><span class="bnav-icon">🏠</span>Clientes</button>
+      <button class="bnav-item" onclick="show('s-team-list')"><span class="bnav-icon">👥</span>Equipe</button>
+      <button class="bnav-item"><span class="bnav-icon">⚙️</span>Menu</button>
+    </div>
+  </div>
+  <div id="s-team-list" class="screen">
+    <div class="hdr"><button class="icon-btn" onclick="show('s-agenda')">←</button><span class="hdr-title">Equipe</span></div>
+    <div class="content"><div style="text-align:center;padding:40px 20px;color:var(--n500)">Ver protótipo completo:<br><strong>gestao-membros/flow.html</strong></div></div>
+    <div class="bnav">
+      <button class="bnav-item" onclick="show('s-agenda')"><span class="bnav-icon">📅</span>Agenda</button>
+      <button class="bnav-item" onclick="show('s-clients')"><span class="bnav-icon">🏠</span>Clientes</button>
+      <button class="bnav-item active"><span class="bnav-icon">👥</span>Equipe</button>
+      <button class="bnav-item"><span class="bnav-icon">⚙️</span>Menu</button>
+    </div>
+  </div>
+
+</div><!-- /phone -->
+
+<!-- Flow index panel -->
+<div style="background:white;border-radius:12px;padding:16px;width:390px;box-shadow:0 2px 8px rgba(0,0,0,.1)">
+  <div style="font-size:12px;font-weight:700;color:#374151;margin-bottom:10px">📋 TELAS NESTE PROTÓTIPO</div>
+  <div style="display:flex;flex-direction:column;gap:4px;font-size:12px">
+    <button onclick="show('s-agenda')" class="flow-nav-btn">① Agenda Confirmada (Gerente)</button>
+    <button onclick="show('s-no-agenda')" class="flow-nav-btn">② Semana sem agenda</button>
+    <button onclick="show('s-generate')" class="flow-nav-btn">③ Revisar Geração Automática</button>
+    <button onclick="show('s-draft')" class="flow-nav-btn">④ Rascunho · Atribuir Equipe</button>
+    <button onclick="show('s-assign')" class="flow-nav-btn">⑤ Atribuir Equipe (detalhe)</button>
+    <button onclick="show('s-member')" class="flow-nav-btn">⑥ Minha Agenda (Membro)</button>
+    <button onclick="show('s-avail')" class="flow-nav-btn">⑦ Registrar Disponibilidade</button>
+  </div>
+</div>
+
+<div class="proto-notes" style="position:static;max-width:390px;width:390px;box-sizing:border-box;border-radius:12px">
+  <strong>📋 Notas:</strong>
+  <ul style="margin-top:6px;padding-left:16px;font-size:11px;color:#555;line-height:1.6">
+    <li>Drag-and-drop de itens entre dias não representado no HTML</li>
+    <li>Validação em tempo real de campos não representada</li>
+    <li>Toast de sucesso após confirmar agenda não implementado</li>
+    <li>Calendário de disponibilidade: dias passados não clicáveis na versão real</li>
+  </ul>
+</div>
+
+<style>
+.cal-day{font-size:12px;padding:6px;border-radius:50%;cursor:pointer;width:28px;height:28px;display:flex;align-items:center;justify-content:center;margin:auto}
+.cal-day.avail{background:var(--success-light);color:var(--success)}
+.cal-day.unavail{background:var(--danger-light);color:var(--danger)}
+.cal-day.today{ring:2px solid var(--primary);font-weight:700;outline:2px solid var(--primary)}
+.cal-day.selected{outline:2px solid var(--n900)}
+.flow-nav-btn{background:var(--n100);border:1px solid var(--n200);border-radius:6px;padding:8px 12px;text-align:left;cursor:pointer;color:var(--n700);font-size:12px;font-family:inherit;transition:.15s}
+.flow-nav-btn:hover{background:var(--primary-light);color:var(--primary);border-color:var(--primary)}
+.proto-notes{background:#FFFBEB;border:1px solid #F59E0B;padding:12px 14px}
+</style>
+
+<script>
+function show(id){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+function showModal(id){document.getElementById(id).style.display='flex'}
+function hideModal(id){document.getElementById(id).style.display='none'}
+function copyWA(){
+  const t=document.getElementById('toast-wa');
+  t.style.display='flex';
+  setTimeout(()=>t.style.display='none',2500);
+}
+function selectDay(el,day){
+  document.querySelectorAll('.cal-day').forEach(d=>d.classList.remove('selected'));
+  el.classList.add('selected');
+  document.getElementById('day-label').textContent=`${day} de Jun 2026`;
+  document.getElementById('day-panel').style.display='block';
+}
+</script>
+</body>
+</html>

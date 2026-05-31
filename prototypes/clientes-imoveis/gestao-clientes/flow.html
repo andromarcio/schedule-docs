@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Protótipo: Gestão de Clientes — Clientes e Imóveis</title>
+
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Inter',-apple-system,sans-serif;background:#E8EAF6;min-height:100vh;display:flex;flex-direction:column;align-items:center;padding:24px 12px;gap:16px}
+:root{--primary:#2563EB;--primary-dark:#1D4ED8;--primary-light:#EFF6FF;--success:#16A34A;--success-light:#F0FDF4;--warning:#D97706;--warning-light:#FFFBEB;--danger:#DC2626;--danger-light:#FEF2F2;--n900:#111827;--n700:#374151;--n500:#6B7280;--n300:#D1D5DB;--n200:#E5E7EB;--n100:#F9FAFB;--radius:12px;--radius-sm:8px}
+.phone{width:390px;height:820px;background:white;border-radius:36px;box-shadow:0 24px 64px rgba(0,0,0,.25);overflow:hidden;position:relative;display:flex;flex-direction:column}
+.screen{display:none;flex-direction:column;height:100%;overflow:hidden}
+.screen.active{display:flex}
+.hdr{background:var(--primary);color:white;padding:14px 16px;display:flex;align-items:center;gap:10px;flex-shrink:0;min-height:56px}
+.hdr-title{font-size:16px;font-weight:600;flex:1}
+.icon-btn{background:rgba(255,255,255,.15);border:none;color:white;width:32px;height:32px;border-radius:50%;cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center}
+.content{flex:1;overflow-y:auto;background:#F9FAFB;padding:12px}
+.bnav{background:white;border-top:1px solid var(--n200);display:flex;flex-shrink:0;padding-bottom:4px}
+.bnav-item{flex:1;display:flex;flex-direction:column;align-items:center;padding:8px 4px 10px;cursor:pointer;border:none;background:none;font-size:10px;font-weight:500;color:var(--n500);gap:3px}
+.bnav-item.active{color:var(--primary)}
+.bnav-icon{font-size:20px}
+/* Search bar */
+.search-bar{display:flex;gap:8px;margin-bottom:12px}
+.search-input{flex:1;border:1.5px solid var(--n300);border-radius:var(--radius-sm);padding:9px 12px;font-size:13px;font-family:inherit;outline:none;background:white}
+.search-input:focus{border-color:var(--primary)}
+/* Client card */
+.client-card{background:white;border-radius:var(--radius-sm);padding:14px;margin-bottom:8px;box-shadow:0 1px 3px rgba(0,0,0,.07);display:flex;gap:12px;align-items:flex-start;cursor:pointer}
+.client-card:active{background:var(--n100)}
+.client-avatar{width:40px;height:40px;border-radius:50%;background:var(--primary-light);color:var(--primary);display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:700;flex-shrink:0}
+.client-info{flex:1;min-width:0}
+.client-name{font-size:13px;font-weight:600;color:var(--n900);margin-bottom:2px}
+.client-phone{font-size:12px;color:var(--n500);margin-bottom:4px}
+.client-tags{display:flex;gap:4px;flex-wrap:wrap}
+.tag{display:inline-flex;padding:2px 7px;border-radius:99px;font-size:10px;font-weight:600}
+.tag-active{background:var(--success-light);color:var(--success)}
+.tag-inactive{background:var(--n200);color:var(--n500)}
+.tag-count{background:var(--primary-light);color:var(--primary)}
+.client-chevron{color:var(--n300);font-size:16px;align-self:center}
+/* Form */
+.form-section{background:white;border-radius:var(--radius);padding:14px;margin-bottom:12px;box-shadow:0 1px 3px rgba(0,0,0,.07)}
+.form-group{margin-bottom:14px}
+.form-label{font-size:12px;font-weight:600;color:var(--n700);margin-bottom:5px;display:block}
+.required{color:var(--danger)}
+.form-input{width:100%;border:1.5px solid var(--n300);border-radius:var(--radius-sm);padding:9px 12px;font-size:13px;font-family:inherit;color:var(--n900);outline:none}
+.form-input:focus{border-color:var(--primary)}
+.form-hint{font-size:11px;color:var(--n500);margin-top:4px}
+.form-error{font-size:11px;color:var(--danger);margin-top:4px}
+.form-input.has-error{border-color:var(--danger)}
+/* Buttons */
+.btn{border:none;border-radius:var(--radius-sm);padding:10px 18px;font-size:13px;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:6px}
+.btn-primary{background:var(--primary);color:white}
+.btn-ghost{background:var(--n100);color:var(--n700);border:1px solid var(--n200)}
+.btn-danger{background:var(--danger);color:white}
+.btn-full{width:100%}
+.confirm-bar{background:white;border-top:1px solid var(--n200);padding:10px 12px;display:flex;gap:8px;flex-shrink:0}
+/* Detail */
+.detail-hero{background:var(--primary);padding:20px 16px 28px;color:white;text-align:center;flex-shrink:0}
+.detail-avatar{width:60px;height:60px;border-radius:50%;background:rgba(255,255,255,.2);color:white;display:flex;align-items:center;justify-content:center;font-size:24px;font-weight:700;margin:0 auto 10px}
+.detail-name{font-size:18px;font-weight:700;margin-bottom:4px}
+.detail-status{font-size:12px;opacity:.8}
+.detail-section{background:white;border-radius:var(--radius);padding:14px;margin-bottom:10px;box-shadow:0 1px 3px rgba(0,0,0,.07)}
+.detail-section-title{font-size:11px;font-weight:700;color:var(--n500);text-transform:uppercase;letter-spacing:.05em;margin-bottom:10px}
+.detail-row{display:flex;justify-content:space-between;align-items:flex-start;padding:6px 0;border-bottom:1px solid var(--n100)}
+.detail-row:last-child{border-bottom:none}
+.detail-label{font-size:12px;color:var(--n500)}
+.detail-value{font-size:12px;color:var(--n900);font-weight:500;text-align:right;max-width:60%}
+.imovel-item{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--n100)}
+.imovel-item:last-child{border-bottom:none}
+.imovel-icon{font-size:20px}
+.imovel-name{font-size:12px;font-weight:600;color:var(--n900)}
+.imovel-freq{font-size:11px;color:var(--n500)}
+/* Modal */
+.modal-overlay{position:absolute;inset:0;background:rgba(0,0,0,.5);display:flex;align-items:flex-end;z-index:100}
+.modal-sheet{background:white;border-radius:20px 20px 0 0;padding:20px 16px 28px;width:100%}
+.modal-title{font-size:16px;font-weight:700;color:var(--n900);margin-bottom:6px}
+.modal-desc{font-size:13px;color:var(--n500);margin-bottom:20px;line-height:1.5}
+.modal-actions{display:flex;flex-direction:column;gap:8px}
+/* Toast */
+.toast{position:absolute;top:64px;left:12px;right:12px;border-radius:var(--radius-sm);padding:12px 14px;font-size:13px;font-weight:500;z-index:200;display:flex;align-items:center;gap:8px;box-shadow:0 4px 12px rgba(0,0,0,.15)}
+.toast-success{background:var(--success);color:white}
+.toast-error{background:var(--danger);color:white}
+/* Proto */
+.proto-badge{position:fixed;top:8px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,.7);color:white;padding:5px 14px;border-radius:99px;font-size:11px;z-index:999;pointer-events:none;backdrop-filter:blur(8px)}
+.flow-nav-btn{background:var(--n100);border:1px solid var(--n200);border-radius:6px;padding:8px 12px;text-align:left;cursor:pointer;color:var(--n700);font-size:12px;font-family:inherit}
+.flow-nav-btn:hover{background:var(--primary-light);color:var(--primary);border-color:var(--primary)}
+.proto-notes{background:#FFFBEB;border:1px solid #F59E0B;padding:12px 14px;border-radius:12px}
+/* Empty state */
+.empty-state{display:flex;flex-direction:column;align-items:center;justify-content:center;height:60%;gap:12px;padding:20px;text-align:center}
+</style>
+</head>
+<body>
+<div class="proto-badge">🔲 PROTÓTIPO — Fluxo: Gestão de Clientes</div>
+
+<div class="phone">
+
+  <!-- TELA 1: Lista de Clientes -->
+  <div id="s-list" class="screen active">
+    <div class="hdr">
+      <span class="hdr-title">Clientes</span>
+      <button class="icon-btn" onclick="show('s-new')" title="Novo cliente">+</button>
+    </div>
+    <div class="content">
+      <div class="search-bar">
+        <input class="search-input" placeholder="🔍  Buscar por nome ou telefone...">
+      </div>
+      <div style="font-size:11px;color:var(--n500);margin-bottom:10px">6 clientes · 5 ativos</div>
+
+      <div class="client-card" onclick="show('s-detail')">
+        <div class="client-avatar">M</div>
+        <div class="client-info">
+          <div class="client-name">Maria Johnson</div>
+          <div class="client-phone">(305) 555-1234</div>
+          <div class="client-tags"><span class="tag tag-active">Ativo</span><span class="tag tag-count">2 imóveis</span></div>
+        </div>
+        <span class="client-chevron">›</span>
+      </div>
+
+      <div class="client-card" onclick="show('s-detail')">
+        <div class="client-avatar" style="background:#F0FDF4;color:#16A34A">S</div>
+        <div class="client-info">
+          <div class="client-name">Sarah Johnson</div>
+          <div class="client-phone">(786) 555-9876</div>
+          <div class="client-tags"><span class="tag tag-active">Ativo</span><span class="tag tag-count">1 imóvel</span></div>
+        </div>
+        <span class="client-chevron">›</span>
+      </div>
+
+      <div class="client-card" onclick="show('s-detail')">
+        <div class="client-avatar" style="background:#FFF7ED;color:#EA580C">K</div>
+        <div class="client-info">
+          <div class="client-name">Karen Williams</div>
+          <div class="client-phone">(305) 555-4455</div>
+          <div class="client-tags"><span class="tag tag-active">Ativo</span><span class="tag tag-count">1 imóvel</span></div>
+        </div>
+        <span class="client-chevron">›</span>
+      </div>
+
+      <div class="client-card" onclick="show('s-detail')">
+        <div class="client-avatar" style="background:#FDF4FF;color:#9333EA">E</div>
+        <div class="client-info">
+          <div class="client-name">Emily Torres</div>
+          <div class="client-phone">(786) 555-3311</div>
+          <div class="client-tags"><span class="tag tag-active">Ativo</span><span class="tag tag-count">1 imóvel</span></div>
+        </div>
+        <span class="client-chevron">›</span>
+      </div>
+
+      <div class="client-card" onclick="show('s-detail')">
+        <div class="client-avatar" style="background:#FFF0F0;color:#DC2626">R</div>
+        <div class="client-info">
+          <div class="client-name">Robert Davis</div>
+          <div class="client-phone">(305) 555-7788</div>
+          <div class="client-tags"><span class="tag tag-active">Ativo</span><span class="tag tag-count">1 imóvel</span></div>
+        </div>
+        <span class="client-chevron">›</span>
+      </div>
+
+      <div class="client-card" style="opacity:.6">
+        <div class="client-avatar" style="background:var(--n200);color:var(--n500)">J</div>
+        <div class="client-info">
+          <div class="client-name">John Smith</div>
+          <div class="client-phone">(786) 555-0011</div>
+          <div class="client-tags"><span class="tag tag-inactive">Inativo</span><span class="tag tag-count">0 imóveis</span></div>
+        </div>
+        <span class="client-chevron">›</span>
+      </div>
+    </div>
+    <div class="bnav">
+      <button class="bnav-item"><span class="bnav-icon">📅</span>Agenda</button>
+      <button class="bnav-item active"><span class="bnav-icon">🏠</span>Clientes</button>
+      <button class="bnav-item"><span class="bnav-icon">👥</span>Equipe</button>
+      <button class="bnav-item"><span class="bnav-icon">⚙️</span>Menu</button>
+    </div>
+  </div>
+
+  <!-- TELA 2: Detalhe do Cliente -->
+  <div id="s-detail" class="screen">
+    <div class="hdr">
+      <button class="icon-btn" onclick="show('s-list')">←</button>
+      <span class="hdr-title">Ficha do Cliente</span>
+      <button class="icon-btn" onclick="show('s-edit')" title="Editar">✏️</button>
+    </div>
+    <div style="flex:1;overflow-y:auto">
+      <div class="detail-hero">
+        <div class="detail-avatar">M</div>
+        <div class="detail-name">Maria Johnson</div>
+        <div class="detail-status">✅ Ativo · Cliente desde Mar 2025</div>
+      </div>
+      <div style="padding:12px">
+        <div class="detail-section">
+          <div class="detail-section-title">Contato</div>
+          <div class="detail-row"><span class="detail-label">Telefone</span><span class="detail-value">(305) 555-1234</span></div>
+          <div class="detail-row"><span class="detail-label">E-mail</span><span class="detail-value">maria@email.com</span></div>
+          <div class="detail-row"><span class="detail-label">Observações</span><span class="detail-value">Preferir contato por texto</span></div>
+        </div>
+        <div class="detail-section">
+          <div class="detail-section-title">Imóveis (2)</div>
+          <div class="imovel-item"><span class="imovel-icon">🏡</span><div><div class="imovel-name">Casa da Maria — Oak St</div><div class="imovel-freq">Tamanho M · Quinzenal · Ativo</div></div></div>
+          <div class="imovel-item"><span class="imovel-icon">🏠</span><div><div class="imovel-name">Apartamento da Maria — Brickell</div><div class="imovel-freq">Tamanho P · Mensal · Ativo</div></div></div>
+          <div style="margin-top:10px"><button class="btn btn-ghost btn-full" style="font-size:12px">+ Adicionar imóvel</button></div>
+        </div>
+        <div class="detail-section">
+          <div class="detail-section-title">Última limpeza</div>
+          <div class="detail-row"><span class="detail-label">Casa — Oak St</span><span class="detail-value">08/06/2026</span></div>
+          <div class="detail-row"><span class="detail-label">Apt — Brickell</span><span class="detail-value">02/06/2026</span></div>
+        </div>
+        <div style="height:8px"></div>
+        <button class="btn btn-full" style="background:var(--danger-light);color:var(--danger);border:1px solid var(--danger)" onclick="showModal('modal-inactivate')">🚫 Inativar Cliente</button>
+      </div>
+    </div>
+    <!-- Modal inativar -->
+    <div id="modal-inactivate" class="modal-overlay" style="display:none" onclick="hideModal('modal-inactivate')">
+      <div class="modal-sheet" onclick="event.stopPropagation()">
+        <div class="modal-title">Inativar Maria Johnson?</div>
+        <div class="modal-desc">Este cliente possui <strong>2 imóvel(is) ativo(s)</strong>. Todos serão inativados também.<br><br>O histórico de limpezas passadas será preservado.</div>
+        <div class="modal-actions">
+          <button class="btn btn-danger btn-full" onclick="hideModal('modal-inactivate');show('s-list')">Sim, inativar tudo</button>
+          <button class="btn btn-ghost btn-full" onclick="hideModal('modal-inactivate')">Cancelar</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TELA 3: Novo Cliente -->
+  <div id="s-new" class="screen">
+    <div class="hdr">
+      <button class="icon-btn" onclick="show('s-list')">←</button>
+      <span class="hdr-title">Novo Cliente</span>
+    </div>
+    <div class="content">
+      <div class="form-section">
+        <div class="form-group">
+          <label class="form-label" for="name">Nome <span class="required">*</span></label>
+          <input id="name" class="form-input" placeholder="Ex: Sarah Johnson" value="">
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="phone">Telefone <span class="required">*</span></label>
+          <input id="phone" class="form-input has-error" placeholder="(XXX) XXX-XXXX" value="78655">
+          <div class="form-error">Informe o telefone no formato (XXX) XXX-XXXX.</div>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="email">E-mail</label>
+          <input id="email" class="form-input" placeholder="email@exemplo.com" value="">
+          <div class="form-hint">Opcional — para envio de confirmações futuras</div>
+        </div>
+        <div class="form-group" style="margin-bottom:0">
+          <label class="form-label" for="notes">Observações</label>
+          <textarea id="notes" class="form-input" rows="3" placeholder="Instruções especiais, preferências de contato..."></textarea>
+        </div>
+      </div>
+    </div>
+    <div class="confirm-bar">
+      <button class="btn btn-ghost" onclick="show('s-list')" style="flex:1">Cancelar</button>
+      <button class="btn btn-primary" onclick="show('s-list')" style="flex:2">Salvar Cliente</button>
+    </div>
+  </div>
+
+  <!-- TELA 4: Editar Cliente -->
+  <div id="s-edit" class="screen">
+    <div class="hdr">
+      <button class="icon-btn" onclick="show('s-detail')">←</button>
+      <span class="hdr-title">Editar Cliente</span>
+    </div>
+    <div class="content">
+      <div class="form-section">
+        <div class="form-group">
+          <label class="form-label">Nome <span class="required">*</span></label>
+          <input class="form-input" value="Maria Johnson">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Telefone <span class="required">*</span></label>
+          <input class="form-input" value="(305) 555-1234">
+        </div>
+        <div class="form-group">
+          <label class="form-label">E-mail</label>
+          <input class="form-input" value="maria@email.com">
+        </div>
+        <div class="form-group" style="margin-bottom:0">
+          <label class="form-label">Observações</label>
+          <textarea class="form-input" rows="3">Preferir contato por texto</textarea>
+        </div>
+      </div>
+      <!-- Toast success -->
+      <div id="toast-edit" class="toast toast-success" style="display:none">✅ Cliente atualizado com sucesso.</div>
+    </div>
+    <div class="confirm-bar">
+      <button class="btn btn-ghost" onclick="show('s-detail')" style="flex:1">Cancelar</button>
+      <button class="btn btn-primary" onclick="showToast('toast-edit');show('s-detail')" style="flex:2">Salvar Alterações</button>
+    </div>
+  </div>
+
+</div><!-- /phone -->
+
+<div style="background:white;border-radius:12px;padding:16px;width:390px;box-shadow:0 2px 8px rgba(0,0,0,.1)">
+  <div style="font-size:12px;font-weight:700;color:#374151;margin-bottom:10px">📋 TELAS NESTE PROTÓTIPO</div>
+  <div style="display:flex;flex-direction:column;gap:4px">
+    <button onclick="show('s-list')" class="flow-nav-btn">① Lista de Clientes</button>
+    <button onclick="show('s-detail')" class="flow-nav-btn">② Ficha do Cliente (detalhe)</button>
+    <button onclick="show('s-new')" class="flow-nav-btn">③ Novo Cliente (com erro de validação)</button>
+    <button onclick="show('s-edit')" class="flow-nav-btn">④ Editar Cliente</button>
+  </div>
+</div>
+
+<div class="proto-notes" style="width:390px">
+  <strong>📋 Notas:</strong>
+  <ul style="margin-top:6px;padding-left:16px;font-size:11px;color:#555;line-height:1.6">
+    <li>Busca em tempo real não implementada — campo decorativo</li>
+    <li>Toast de sucesso ao salvar cliente novo não implementado no fluxo completo</li>
+    <li>Inativação navega para a lista mas sem marcação visual de inativo neste protótipo</li>
+  </ul>
+</div>
+
+<script>
+function show(id){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));document.getElementById(id).classList.add('active')}
+function showModal(id){document.getElementById(id).style.display='flex'}
+function hideModal(id){document.getElementById(id).style.display='none'}
+function showToast(id){const t=document.getElementById(id);t.style.display='flex';setTimeout(()=>t.style.display='none',2000)}
+</script>
+</body>
+</html>

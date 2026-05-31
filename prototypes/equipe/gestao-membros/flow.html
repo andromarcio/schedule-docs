@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Protótipo: Gestão de Membros — Equipe</title>
+
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Inter',-apple-system,sans-serif;background:#E8EAF6;min-height:100vh;display:flex;flex-direction:column;align-items:center;padding:24px 12px;gap:16px}
+:root{--primary:#2563EB;--primary-light:#EFF6FF;--success:#16A34A;--success-light:#F0FDF4;--warning:#D97706;--warning-light:#FFFBEB;--danger:#DC2626;--danger-light:#FEF2F2;--n900:#111827;--n700:#374151;--n500:#6B7280;--n300:#D1D5DB;--n200:#E5E7EB;--n100:#F9FAFB;--radius:12px;--radius-sm:8px}
+.phone{width:390px;height:820px;background:white;border-radius:36px;box-shadow:0 24px 64px rgba(0,0,0,.25);overflow:hidden;position:relative;display:flex;flex-direction:column}
+.screen{display:none;flex-direction:column;height:100%;overflow:hidden}.screen.active{display:flex}
+.hdr{background:var(--primary);color:white;padding:14px 16px;display:flex;align-items:center;gap:10px;flex-shrink:0;min-height:56px}
+.hdr-title{font-size:16px;font-weight:600;flex:1}
+.icon-btn{background:rgba(255,255,255,.15);border:none;color:white;width:32px;height:32px;border-radius:50%;cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center}
+.content{flex:1;overflow-y:auto;background:#F9FAFB;padding:12px}
+.bnav{background:white;border-top:1px solid var(--n200);display:flex;flex-shrink:0;padding-bottom:4px}
+.bnav-item{flex:1;display:flex;flex-direction:column;align-items:center;padding:8px 4px 10px;cursor:pointer;border:none;background:none;font-size:10px;font-weight:500;color:var(--n500);gap:3px}
+.bnav-item.active{color:var(--primary)}.bnav-icon{font-size:20px}
+/* Member card */
+.member-card{background:white;border-radius:var(--radius-sm);padding:14px;margin-bottom:8px;box-shadow:0 1px 3px rgba(0,0,0,.07);display:flex;gap:12px;align-items:center;cursor:pointer}
+.member-avatar{width:44px;height:44px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:700;flex-shrink:0}
+.member-info{flex:1}
+.member-name{font-size:13px;font-weight:600;color:var(--n900);margin-bottom:2px}
+.member-phone{font-size:12px;color:var(--n500);margin-bottom:4px}
+.member-tags{display:flex;gap:4px}
+.tag{display:inline-flex;padding:2px 7px;border-radius:99px;font-size:10px;font-weight:600}
+.tag-active{background:var(--success-light);color:var(--success)}
+.tag-inactive{background:var(--n200);color:var(--n500)}
+.tag-avail{background:var(--success-light);color:var(--success)}
+.tag-unavail{background:var(--danger-light);color:var(--danger)}
+.tag-helper{background:var(--warning-light);color:var(--warning)}
+.avail-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+.dot-avail{background:var(--success)}
+.dot-unavail{background:var(--danger)}
+.dot-unknown{background:var(--n300)}
+/* Form */
+.form-section{background:white;border-radius:var(--radius);padding:14px;margin-bottom:12px;box-shadow:0 1px 3px rgba(0,0,0,.07)}
+.form-group{margin-bottom:14px}
+.form-label{font-size:12px;font-weight:600;color:var(--n700);margin-bottom:5px;display:block}
+.required{color:var(--danger)}
+.form-input{width:100%;border:1.5px solid var(--n300);border-radius:var(--radius-sm);padding:9px 12px;font-size:13px;font-family:inherit;color:var(--n900);outline:none}
+.form-input:focus{border-color:var(--primary)}
+.form-hint{font-size:11px;color:var(--n500);margin-top:4px}
+.btn{border:none;border-radius:var(--radius-sm);padding:10px 18px;font-size:13px;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:6px}
+.btn-primary{background:var(--primary);color:white}.btn-ghost{background:var(--n100);color:var(--n700);border:1px solid var(--n200)}.btn-full{width:100%}
+.confirm-bar{background:white;border-top:1px solid var(--n200);padding:10px 12px;display:flex;gap:8px;flex-shrink:0}
+/* Tabs */
+.tabs{display:flex;background:var(--n100);border-radius:var(--radius-sm);padding:3px;margin-bottom:12px}
+.tab{flex:1;text-align:center;padding:7px;border-radius:8px;font-size:12px;font-weight:600;color:var(--n500);cursor:pointer}
+.tab.active{background:white;color:var(--primary);box-shadow:0 1px 3px rgba(0,0,0,.1)}
+/* Availability calendar */
+.week-strip{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin-bottom:12px}
+.day-cell{background:white;border-radius:var(--radius-sm);padding:8px 4px;text-align:center;box-shadow:0 1px 3px rgba(0,0,0,.07);cursor:pointer;border:2px solid transparent}
+.day-cell.avail{border-color:var(--success);background:var(--success-light)}
+.day-cell.unavail{border-color:var(--danger);background:var(--danger-light)}
+.day-cell.today{border-color:var(--primary)}
+.day-name{font-size:10px;font-weight:700;color:var(--n500);margin-bottom:2px}
+.day-num{font-size:15px;font-weight:700;color:var(--n900)}
+.day-status{font-size:10px;margin-top:2px}
+/* Detail */
+.detail-hero{background:var(--primary);padding:20px 16px 24px;color:white;text-align:center;flex-shrink:0}
+.detail-avatar{width:56px;height:56px;border-radius:50%;background:rgba(255,255,255,.2);color:white;display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:700;margin:0 auto 10px}
+.detail-name{font-size:17px;font-weight:700;margin-bottom:4px}
+.detail-section{background:white;border-radius:var(--radius);padding:14px;margin-bottom:10px;box-shadow:0 1px 3px rgba(0,0,0,.07)}
+.detail-row{display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--n100)}
+.detail-row:last-child{border-bottom:none}
+.detail-label{font-size:12px;color:var(--n500)}
+.detail-value{font-size:12px;color:var(--n900);font-weight:500}
+/* Success panel */
+.success-panel{background:var(--success-light);border:2px solid var(--success);border-radius:var(--radius);padding:16px;text-align:center}
+/* Modal */
+.modal-overlay{position:absolute;inset:0;background:rgba(0,0,0,.5);display:flex;align-items:flex-end;z-index:100}
+.modal-sheet{background:white;border-radius:20px 20px 0 0;padding:20px 16px 28px;width:100%}
+.modal-title{font-size:16px;font-weight:700;color:var(--n900);margin-bottom:6px}
+.modal-desc{font-size:13px;color:var(--n500);margin-bottom:20px;line-height:1.5}
+.modal-actions{display:flex;flex-direction:column;gap:8px}
+.proto-badge{position:fixed;top:8px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,.7);color:white;padding:5px 14px;border-radius:99px;font-size:11px;z-index:999;pointer-events:none}
+.flow-nav-btn{background:var(--n100);border:1px solid var(--n200);border-radius:6px;padding:8px 12px;text-align:left;cursor:pointer;color:var(--n700);font-size:12px;font-family:inherit}
+.flow-nav-btn:hover{background:var(--primary-light);color:var(--primary);border-color:var(--primary)}
+.proto-notes{background:#FFFBEB;border:1px solid #F59E0B;padding:12px 14px;border-radius:12px}
+</style>
+</head>
+<body>
+<div class="proto-badge">🔲 PROTÓTIPO — Fluxo: Gestão de Membros</div>
+
+<div class="phone">
+
+  <!-- TELA 1: Lista de Membros -->
+  <div id="s-list" class="screen active">
+    <div class="hdr">
+      <span class="hdr-title">Equipe</span>
+      <button class="icon-btn" onclick="show('s-new')" title="Nova membro">+</button>
+    </div>
+    <div class="content">
+      <div class="tabs">
+        <div class="tab active">Fixas (3)</div>
+        <div class="tab" onclick="show('s-helpers')">Helpers (2)</div>
+      </div>
+
+      <!-- Semana atual -->
+      <div style="font-size:11px;font-weight:700;color:var(--n500);text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px">Disponibilidade — Semana 08–12/06</div>
+
+      <div class="member-card" onclick="show('s-detail')">
+        <div class="member-avatar" style="background:var(--primary-light);color:var(--primary)">A</div>
+        <div class="member-info">
+          <div class="member-name">Ana Oliveira</div>
+          <div class="member-phone">(786) 555-2222</div>
+          <div class="member-tags">
+            <span class="tag tag-active">Ativa</span>
+            <span class="tag tag-avail">✅ Seg–Sex disponível</span>
+          </div>
+        </div>
+        <span style="color:var(--n300);font-size:16px">›</span>
+      </div>
+
+      <div class="member-card" onclick="show('s-detail')">
+        <div class="member-avatar" style="background:#F0FDF4;color:#16A34A">C</div>
+        <div class="member-info">
+          <div class="member-name">Carol Santos</div>
+          <div class="member-phone">(305) 555-3333</div>
+          <div class="member-tags">
+            <span class="tag tag-active">Ativa</span>
+            <span class="tag tag-avail">✅ Disponível esta semana</span>
+          </div>
+        </div>
+        <span style="color:var(--n300);font-size:16px">›</span>
+      </div>
+
+      <div class="member-card" onclick="show('s-detail')">
+        <div class="member-avatar" style="background:#FFF7ED;color:#EA580C">L</div>
+        <div class="member-info">
+          <div class="member-name">Lucia Ferreira</div>
+          <div class="member-phone">(786) 555-5555</div>
+          <div class="member-tags">
+            <span class="tag tag-active">Ativa</span>
+            <span class="tag tag-unavail">❌ Qua indisponível</span>
+          </div>
+        </div>
+        <span style="color:var(--n300);font-size:16px">›</span>
+      </div>
+    </div>
+    <div class="bnav">
+      <button class="bnav-item"><span class="bnav-icon">📅</span>Agenda</button>
+      <button class="bnav-item"><span class="bnav-icon">🏠</span>Clientes</button>
+      <button class="bnav-item active"><span class="bnav-icon">👥</span>Equipe</button>
+      <button class="bnav-item"><span class="bnav-icon">⚙️</span>Menu</button>
+    </div>
+  </div>
+
+  <!-- TELA 2: Detalhe da Membro -->
+  <div id="s-detail" class="screen">
+    <div class="hdr">
+      <button class="icon-btn" onclick="show('s-list')">←</button>
+      <span class="hdr-title">Ficha da Membro</span>
+    </div>
+    <div style="flex:1;overflow-y:auto">
+      <div class="detail-hero">
+        <div class="detail-avatar">A</div>
+        <div class="detail-name">Ana Oliveira</div>
+        <div style="font-size:12px;opacity:.8">Membro Fixa · Ativa</div>
+      </div>
+      <div style="padding:12px">
+        <div class="detail-section">
+          <div style="font-size:11px;font-weight:700;color:var(--n500);text-transform:uppercase;letter-spacing:.05em;margin-bottom:10px">Contato</div>
+          <div class="detail-row"><span class="detail-label">Telefone</span><span class="detail-value">(786) 555-2222</span></div>
+          <div class="detail-row"><span class="detail-label">E-mail acesso</span><span class="detail-value">ana@gmail.com</span></div>
+          <div class="detail-row"><span class="detail-label">Acesso ao app</span><span class="detail-value" style="color:var(--success)">✅ Ativo</span></div>
+        </div>
+        <div class="detail-section">
+          <div style="font-size:11px;font-weight:700;color:var(--n500);text-transform:uppercase;letter-spacing:.05em;margin-bottom:10px">Disponibilidade — Jun 2026</div>
+          <div class="week-strip">
+            <div class="day-cell avail"><div class="day-name">SEG</div><div class="day-num">8</div><div class="day-status">✅</div></div>
+            <div class="day-cell avail"><div class="day-name">TER</div><div class="day-num">9</div><div class="day-status">✅</div></div>
+            <div class="day-cell avail"><div class="day-name">QUA</div><div class="day-num">10</div><div class="day-status">✅</div></div>
+            <div class="day-cell avail"><div class="day-name">QUI</div><div class="day-num">11</div><div class="day-status">✅</div></div>
+            <div class="day-cell avail"><div class="day-name">SEX</div><div class="day-num">12</div><div class="day-status">✅</div></div>
+          </div>
+        </div>
+        <div class="detail-section">
+          <div style="font-size:11px;font-weight:700;color:var(--n500);text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px">Esta semana</div>
+          <div style="font-size:12px;color:var(--n700);line-height:1.7">
+            📅 Seg: Casa da Maria, Casa da Sarah<br>
+            📅 Qua: Casa do Robert<br>
+            <span style="color:var(--n500)">Qui–Sex: sem atribuição</span>
+          </div>
+        </div>
+        <button class="btn btn-full" style="background:var(--danger-light);color:var(--danger);border:1px solid var(--danger)" onclick="showModal('modal-inactivate')">🚫 Inativar Membro</button>
+      </div>
+    </div>
+    <div id="modal-inactivate" class="modal-overlay" style="display:none" onclick="hideModal('modal-inactivate')">
+      <div class="modal-sheet" onclick="event.stopPropagation()">
+        <div class="modal-title">Inativar Ana Oliveira?</div>
+        <div class="modal-desc">Ela perderá acesso ao app imediatamente. O histórico de atribuições passadas será preservado.</div>
+        <div class="modal-actions">
+          <button class="btn btn-full" style="background:var(--danger);color:white" onclick="hideModal('modal-inactivate');show('s-list')">Sim, inativar</button>
+          <button class="btn btn-ghost btn-full" onclick="hideModal('modal-inactivate')">Cancelar</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TELA 3: Nova Membro -->
+  <div id="s-new" class="screen">
+    <div class="hdr">
+      <button class="icon-btn" onclick="show('s-list')">←</button>
+      <span class="hdr-title">Nova Membro</span>
+    </div>
+    <div class="content">
+      <div class="form-section">
+        <div class="form-group">
+          <label class="form-label">Nome <span class="required">*</span></label>
+          <input class="form-input" placeholder="Nome completo">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Telefone <span class="required">*</span></label>
+          <input class="form-input" placeholder="(XXX) XXX-XXXX">
+        </div>
+        <div class="form-group" style="margin-bottom:0">
+          <label class="form-label">E-mail de acesso ao app</label>
+          <input class="form-input" placeholder="email@exemplo.com" type="email">
+          <div class="form-hint">Se informado, a membro usa e-mail + senha para entrar. Se não, usa telefone.</div>
+        </div>
+      </div>
+      <div class="form-section">
+        <div class="form-group" style="margin-bottom:0">
+          <label class="form-label">Observações</label>
+          <textarea class="form-input" rows="3" placeholder="Habilidades especiais, restrições..."></textarea>
+        </div>
+      </div>
+    </div>
+    <div class="confirm-bar">
+      <button class="btn btn-ghost" onclick="show('s-list')" style="flex:1">Cancelar</button>
+      <button class="btn btn-primary" onclick="show('s-saved')" style="flex:2">Cadastrar Membro</button>
+    </div>
+  </div>
+
+  <!-- TELA 4: Membro salva — exibe senha provisória -->
+  <div id="s-saved" class="screen">
+    <div class="hdr">
+      <span class="hdr-title">Membro Cadastrada</span>
+    </div>
+    <div class="content" style="display:flex;flex-direction:column;justify-content:center;align-items:center;gap:16px;padding:24px">
+      <div style="font-size:56px">🎉</div>
+      <div style="font-size:17px;font-weight:700;color:var(--n900);text-align:center">Carol Santos cadastrada!</div>
+      <div style="font-size:13px;color:var(--n500);text-align:center;line-height:1.5">Compartilhe a senha provisória com ela via WhatsApp:</div>
+      <div style="background:var(--n100);border:2px dashed var(--n300);border-radius:var(--radius);padding:16px 24px;text-align:center;width:100%">
+        <div style="font-size:11px;color:var(--n500);margin-bottom:6px">SENHA PROVISÓRIA</div>
+        <div style="font-size:28px;font-weight:700;letter-spacing:4px;color:var(--n900);font-family:monospace">ABCD-7823</div>
+        <div style="font-size:11px;color:var(--n500);margin-top:6px">Ela deverá trocar no primeiro acesso</div>
+      </div>
+      <button class="btn btn-primary btn-full" onclick="copyPass()">📋 Copiar senha para WhatsApp</button>
+      <button class="btn btn-ghost btn-full" onclick="show('s-list')">Voltar para a lista</button>
+      <div id="copy-toast" style="display:none;background:var(--success);color:white;border-radius:8px;padding:10px 14px;font-size:12px;font-weight:500;text-align:center">✅ Senha copiada!</div>
+    </div>
+  </div>
+
+  <!-- TELA 5: Disponibilidade (visão Gerente de uma membro) -->
+  <div id="s-avail-detail" class="screen">
+    <div class="hdr">
+      <button class="icon-btn" onclick="show('s-detail')">←</button>
+      <span class="hdr-title">Disponibilidade — Lucia</span>
+    </div>
+    <div class="content">
+      <div style="font-size:12px;color:var(--n500);margin-bottom:12px">Semana de 08–12 Jun 2026</div>
+      <div class="week-strip">
+        <div class="day-cell avail"><div class="day-name">SEG</div><div class="day-num">8</div><div class="day-status">✅</div></div>
+        <div class="day-cell avail"><div class="day-name">TER</div><div class="day-num">9</div><div class="day-status">✅</div></div>
+        <div class="day-cell unavail"><div class="day-name">QUA</div><div class="day-num">10</div><div class="day-status">❌</div></div>
+        <div class="day-cell avail"><div class="day-name">QUI</div><div class="day-num">11</div><div class="day-status">✅</div></div>
+        <div class="day-cell avail"><div class="day-name">SEX</div><div class="day-num">12</div><div class="day-status">✅</div></div>
+      </div>
+      <div style="background:var(--danger-light);border-radius:var(--radius-sm);padding:10px 12px;font-size:12px;color:var(--danger);margin-bottom:12px">❌ <strong>Quarta 10/06:</strong> Consulta médica</div>
+      <div style="background:white;border-radius:var(--radius);padding:14px;box-shadow:0 1px 3px rgba(0,0,0,.07)">
+        <div style="font-size:12px;font-weight:700;color:var(--n900);margin-bottom:12px">Registrar para 10/06</div>
+        <div style="display:flex;gap:8px;margin-bottom:12px">
+          <button class="btn" style="flex:1;background:var(--n100);color:var(--n500);border:1px solid var(--n200);font-size:12px">✅ Disponível</button>
+          <button class="btn" style="flex:1;background:var(--danger-light);color:var(--danger);border:2px solid var(--danger);font-size:12px">❌ Indisponível</button>
+        </div>
+        <input class="form-input" style="font-size:12px" placeholder="Motivo (opcional)" value="Consulta médica">
+        <button class="btn btn-primary btn-full" style="margin-top:10px" onclick="show('s-detail')">Salvar</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- TELA Helpers placeholder -->
+  <div id="s-helpers" class="screen">
+    <div class="hdr"><span class="hdr-title">Equipe</span></div>
+    <div class="content"><div class="tabs"><div class="tab" onclick="show('s-list')">Fixas (3)</div><div class="tab active">Helpers (2)</div></div><div style="text-align:center;padding:30px 20px;color:var(--n500)">Ver protótipo completo:<br><strong>gestao-helpers/flow.html</strong></div></div>
+    <div class="bnav"><button class="bnav-item"><span class="bnav-icon">📅</span>Agenda</button><button class="bnav-item"><span class="bnav-icon">🏠</span>Clientes</button><button class="bnav-item active"><span class="bnav-icon">👥</span>Equipe</button><button class="bnav-item"><span class="bnav-icon">⚙️</span>Menu</button></div>
+  </div>
+
+</div><!-- /phone -->
+
+<div style="background:white;border-radius:12px;padding:16px;width:390px;box-shadow:0 2px 8px rgba(0,0,0,.1)">
+  <div style="font-size:12px;font-weight:700;color:#374151;margin-bottom:10px">📋 TELAS NESTE PROTÓTIPO</div>
+  <div style="display:flex;flex-direction:column;gap:4px">
+    <button onclick="show('s-list')" class="flow-nav-btn">① Lista de Membros (com status de disponibilidade)</button>
+    <button onclick="show('s-detail')" class="flow-nav-btn">② Ficha da Membro (com agenda da semana)</button>
+    <button onclick="show('s-new')" class="flow-nav-btn">③ Cadastrar Membro</button>
+    <button onclick="show('s-saved')" class="flow-nav-btn">④ Confirmação + Senha Provisória</button>
+    <button onclick="show('s-avail-detail')" class="flow-nav-btn">⑤ Disponibilidade semanal (visão Gerente)</button>
+  </div>
+</div>
+
+<div class="proto-notes" style="width:390px">
+  <strong>📋 Notas:</strong>
+  <ul style="margin-top:6px;padding-left:16px;font-size:11px;color:#555;line-height:1.6">
+    <li>Senha provisória é decorativa — gerada aleatoriamente na versão real</li>
+    <li>Calendário completo (múltiplas semanas) não implementado — apenas semana atual</li>
+    <li>Navegação entre semanas no calendário não implementada neste protótipo</li>
+  </ul>
+</div>
+
+<script>
+function show(id){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));document.getElementById(id).classList.add('active')}
+function showModal(id){document.getElementById(id).style.display='flex'}
+function hideModal(id){document.getElementById(id).style.display='none'}
+function copyPass(){const t=document.getElementById('copy-toast');t.style.display='block';setTimeout(()=>t.style.display='none',2000)}
+</script>
+</body>
+</html>

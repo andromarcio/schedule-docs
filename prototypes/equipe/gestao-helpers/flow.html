@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Protótipo: Gestão de Helpers — Equipe</title>
+
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Inter',-apple-system,sans-serif;background:#E8EAF6;min-height:100vh;display:flex;flex-direction:column;align-items:center;padding:24px 12px;gap:16px}
+:root{--primary:#2563EB;--primary-light:#EFF6FF;--success:#16A34A;--success-light:#F0FDF4;--warning:#D97706;--warning-light:#FFFBEB;--danger:#DC2626;--danger-light:#FEF2F2;--n900:#111827;--n700:#374151;--n500:#6B7280;--n300:#D1D5DB;--n200:#E5E7EB;--n100:#F9FAFB;--radius:12px;--radius-sm:8px}
+.phone{width:390px;height:820px;background:white;border-radius:36px;box-shadow:0 24px 64px rgba(0,0,0,.25);overflow:hidden;display:flex;flex-direction:column}
+.screen{display:none;flex-direction:column;height:100%;overflow:hidden}.screen.active{display:flex}
+.hdr{background:var(--primary);color:white;padding:14px 16px;display:flex;align-items:center;gap:10px;flex-shrink:0;min-height:56px}
+.hdr-title{font-size:16px;font-weight:600;flex:1}
+.icon-btn{background:rgba(255,255,255,.15);border:none;color:white;width:32px;height:32px;border-radius:50%;cursor:pointer;font-size:16px;display:flex;align-items:center;justify-content:center}
+.content{flex:1;overflow-y:auto;background:#F9FAFB;padding:12px}
+.bnav{background:white;border-top:1px solid var(--n200);display:flex;flex-shrink:0;padding-bottom:4px}
+.bnav-item{flex:1;display:flex;flex-direction:column;align-items:center;padding:8px 4px 10px;cursor:pointer;border:none;background:none;font-size:10px;font-weight:500;color:var(--n500);gap:3px}
+.bnav-item.active{color:var(--primary)}.bnav-icon{font-size:20px}
+.tabs{display:flex;background:var(--n100);border-radius:var(--radius-sm);padding:3px;margin-bottom:12px}
+.tab{flex:1;text-align:center;padding:7px;border-radius:8px;font-size:12px;font-weight:600;color:var(--n500);cursor:pointer}
+.tab.active{background:white;color:var(--primary);box-shadow:0 1px 3px rgba(0,0,0,.1)}
+.helper-card{background:white;border-radius:var(--radius-sm);padding:14px;margin-bottom:8px;box-shadow:0 1px 3px rgba(0,0,0,.07);display:flex;gap:12px;align-items:center}
+.helper-avatar{width:44px;height:44px;border-radius:50%;background:var(--warning-light);color:var(--warning);display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:700;flex-shrink:0}
+.helper-info{flex:1}
+.helper-name{font-size:13px;font-weight:600;color:var(--n900);margin-bottom:2px}
+.helper-phone{font-size:12px;color:var(--n500);margin-bottom:4px}
+.tag{display:inline-flex;padding:2px 7px;border-radius:99px;font-size:10px;font-weight:600}
+.tag-helper{background:var(--warning-light);color:var(--warning)}
+.form-section{background:white;border-radius:var(--radius);padding:14px;margin-bottom:12px;box-shadow:0 1px 3px rgba(0,0,0,.07)}
+.form-group{margin-bottom:14px}
+.form-label{font-size:12px;font-weight:600;color:var(--n700);margin-bottom:5px;display:block}
+.required{color:var(--danger)}
+.form-input{width:100%;border:1.5px solid var(--n300);border-radius:var(--radius-sm);padding:9px 12px;font-size:13px;font-family:inherit;color:var(--n900);outline:none}
+.form-input:focus{border-color:var(--primary)}
+.btn{border:none;border-radius:var(--radius-sm);padding:10px 18px;font-size:13px;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:6px}
+.btn-primary{background:var(--primary);color:white}.btn-ghost{background:var(--n100);color:var(--n700);border:1px solid var(--n200)}.btn-full{width:100%}
+.confirm-bar{background:white;border-top:1px solid var(--n200);padding:10px 12px;display:flex;gap:8px;flex-shrink:0}
+.info-box{background:var(--warning-light);border-radius:var(--radius-sm);padding:10px 12px;font-size:12px;color:var(--warning);margin-bottom:12px}
+.proto-badge{position:fixed;top:8px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,.7);color:white;padding:5px 14px;border-radius:99px;font-size:11px;z-index:999;pointer-events:none}
+.flow-nav-btn{background:var(--n100);border:1px solid var(--n200);border-radius:6px;padding:8px 12px;text-align:left;cursor:pointer;color:var(--n700);font-size:12px;font-family:inherit}
+.flow-nav-btn:hover{background:var(--primary-light);color:var(--primary);border-color:var(--primary)}
+.proto-notes{background:#FFFBEB;border:1px solid #F59E0B;padding:12px 14px;border-radius:12px}
+</style>
+</head>
+<body>
+<div class="proto-badge">🔲 PROTÓTIPO — Fluxo: Gestão de Helpers</div>
+
+<div class="phone">
+
+  <!-- TELA 1: Lista de Helpers -->
+  <div id="s-list" class="screen active">
+    <div class="hdr">
+      <span class="hdr-title">Equipe</span>
+      <button class="icon-btn" onclick="show('s-new')" title="Nova helper">+</button>
+    </div>
+    <div class="content">
+      <div class="tabs">
+        <div class="tab">Fixas (3)</div>
+        <div class="tab active">Helpers (2)</div>
+      </div>
+      <div class="info-box">ℹ️ Helpers são sempre consideradas disponíveis para atribuição. Não registram disponibilidade no app.</div>
+
+      <div class="helper-card">
+        <div class="helper-avatar">J</div>
+        <div class="helper-info">
+          <div class="helper-name">Jessica Lima</div>
+          <div class="helper-phone">(305) 555-7777</div>
+          <div><span class="tag tag-helper">Helper</span></div>
+        </div>
+        <button class="btn btn-ghost" style="font-size:11px;padding:5px 10px">✕ Remover</button>
+      </div>
+
+      <div class="helper-card">
+        <div class="helper-avatar" style="background:#F0FDF4;color:#16A34A">M</div>
+        <div class="helper-info">
+          <div class="helper-name">Marta Souza</div>
+          <div class="helper-phone">(786) 555-4400</div>
+          <div><span class="tag tag-helper">Helper</span></div>
+        </div>
+        <button class="btn btn-ghost" style="font-size:11px;padding:5px 10px">✕ Remover</button>
+      </div>
+
+      <div style="margin-top:16px">
+        <button class="btn btn-primary btn-full" onclick="show('s-new')">+ Cadastrar Nova Helper</button>
+      </div>
+    </div>
+    <div class="bnav">
+      <button class="bnav-item"><span class="bnav-icon">📅</span>Agenda</button>
+      <button class="bnav-item"><span class="bnav-icon">🏠</span>Clientes</button>
+      <button class="bnav-item active"><span class="bnav-icon">👥</span>Equipe</button>
+      <button class="bnav-item"><span class="bnav-icon">⚙️</span>Menu</button>
+    </div>
+  </div>
+
+  <!-- TELA 2: Cadastrar Helper -->
+  <div id="s-new" class="screen">
+    <div class="hdr">
+      <button class="icon-btn" onclick="show('s-list')">←</button>
+      <span class="hdr-title">Nova Helper</span>
+    </div>
+    <div class="content">
+      <div class="info-box">ℹ️ Helpers não têm acesso ao app e não precisam de senha.</div>
+      <div class="form-section">
+        <div class="form-group">
+          <label class="form-label">Nome <span class="required">*</span></label>
+          <input class="form-input" placeholder="Nome completo">
+        </div>
+        <div class="form-group" style="margin-bottom:0">
+          <label class="form-label">Telefone <span class="required">*</span></label>
+          <input class="form-input" placeholder="(XXX) XXX-XXXX">
+        </div>
+      </div>
+      <div class="form-section">
+        <div class="form-group" style="margin-bottom:0">
+          <label class="form-label">Observações</label>
+          <textarea class="form-input" rows="3" placeholder="Especialidades, horários, disponibilidade habitual..."></textarea>
+        </div>
+      </div>
+    </div>
+    <div class="confirm-bar">
+      <button class="btn btn-ghost" onclick="show('s-list')" style="flex:1">Cancelar</button>
+      <button class="btn btn-primary" onclick="show('s-list')" style="flex:2">Cadastrar Helper</button>
+    </div>
+  </div>
+
+</div>
+
+<div style="background:white;border-radius:12px;padding:16px;width:390px;box-shadow:0 2px 8px rgba(0,0,0,.1)">
+  <div style="font-size:12px;font-weight:700;color:#374151;margin-bottom:10px">📋 TELAS NESTE PROTÓTIPO</div>
+  <div style="display:flex;flex-direction:column;gap:4px">
+    <button onclick="show('s-list')" class="flow-nav-btn">① Lista de Helpers</button>
+    <button onclick="show('s-new')" class="flow-nav-btn">② Cadastrar Helper</button>
+  </div>
+</div>
+
+<div class="proto-notes" style="width:390px">
+  <strong>📋 Notas:</strong>
+  <ul style="margin-top:6px;padding-left:16px;font-size:11px;color:#555;line-height:1.6">
+    <li>Remoção de helper (botão "✕") não implementada — decorativa neste protótipo</li>
+    <li>Helpers sem acesso ao app não têm tela de perfil própria</li>
+  </ul>
+</div>
+
+<script>
+function show(id){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));document.getElementById(id).classList.add('active')}
+</script>
+</body>
+</html>
