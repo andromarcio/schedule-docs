@@ -43,10 +43,19 @@ const DIR_ICONS = {
   'data-models': '🗄️',
 };
 
+/* ── Nomes de exibição para diretórios ── */
+const DIR_DISPLAY_NAMES = {
+  'modules': 'Módulos',
+};
+
+/* ── Prefixos a remover nos títulos de README dentro de modules/ ── */
+const TITLE_STRIP_RE = /^(Domínio|Feature Set|Feature|Nível\s*\d+)\s*[:\-–]\s*/i;
+
 /* ── Estado global ── */
 let state = {
   tree:       [],           // árvore plana da API
   treeMap:    {},           // path → nó
+  dirTitles:  {},           // path → título extraído do README.md
   activeFile: null,
   sidebarOpen: true,
   theme:      localStorage.getItem('theme') || 'light',
@@ -181,15 +190,87 @@ function renderSidebar() {
   const nodes = buildTreeNode(state.tree);
   treeEl.innerHTML = '';
 
-  // Arquivo README.md na raiz sempre no topo
-  const readme = nodes.find(n => n.name.toLowerCase() === 'readme.md');
-  const n0vision = nodes.find(n => n.name === 'N0_PRODUCT_VISION.md');
-  const rest = nodes.filter(n => n !== readme && n !== n0vision);
+  // 1. Item fixo: README da raiz (sempre primeiro)
+  treeEl.appendChild(createFixedReadmeItem());
 
-  const ordered = [readme, n0vision, ...rest].filter(Boolean);
-  ordered.forEach(node => {
-    treeEl.appendChild(renderNode(node, 0));
-  });
+  // 2. Apenas diretórios na raiz (arquivos raiz não aparecem no menu)
+  const dirs = nodes.filter(n => n.type === 'tree');
+  dirs.forEach(node => treeEl.appendChild(renderNode(node, 0)));
+
+  // 3. Carrega títulos async para diretórios dentro de modules/
+  loadModuleDirTitles();
+}
+
+/* Item fixo: abre README.md da raiz */
+function createFixedReadmeItem() {
+  const item = document.createElement('div');
+  item.className = 'tree-item';
+
+  const row = document.createElement('div');
+  row.className = 'tree-row tree-row-pinned';
+  row.dataset.path = 'README.md';
+  row.dataset.type  = 'file';
+  if (state.activeFile === 'README.md') row.classList.add('active');
+
+  const chev = document.createElement('span');
+  chev.className = 'tree-chevron leaf';
+  chev.innerHTML  = '▶';
+  row.appendChild(chev);
+
+  const icon = document.createElement('span');
+  icon.className   = 'tree-icon';
+  icon.textContent = '🏠';
+  row.appendChild(icon);
+
+  const label = document.createElement('span');
+  label.className   = 'tree-name';
+  label.textContent = 'Início';
+  row.appendChild(label);
+
+  item.appendChild(row);
+  row.addEventListener('click', () => navigateTo('README.md'));
+  return item;
+}
+
+/* Verifica se o path está dentro de modules/ */
+function isInsideModules(path) {
+  return path.startsWith('modules/');
+}
+
+/* Retorna nome de exibição — renomeia dirs e usa títulos carregados async */
+function getDisplayName(node) {
+  // Alias fixo (ex: modules → Módulos)
+  if (DIR_DISPLAY_NAMES[node.path]) return DIR_DISPLAY_NAMES[node.path];
+  // Para dirs dentro de modules/, usa título extraído do README
+  if (node.type === 'tree' && isInsideModules(node.path)) {
+    return state.dirTitles[node.path] || node.name;
+  }
+  return node.name;
+}
+
+/* Carrega assincronamente os títulos de todos os dirs dentro de modules/ */
+async function loadModuleDirTitles() {
+  const moduleDirs = state.tree.filter(n => n.type === 'tree' && isInsideModules(n.path));
+
+  await Promise.all(moduleDirs.map(async dir => {
+    const readmePath = `${dir.path}/README.md`;
+    if (!state.treeMap[readmePath]) return;
+    try {
+      const res = await fetch(`${RAW_BASE}/${readmePath}`);
+      if (!res.ok) return;
+      const text = await res.text();
+      // Extrai o primeiro heading # …
+      const match = text.match(/^#\s+(.+)/m);
+      if (!match) return;
+      let title = match[1].trim();
+      // Remove prefixos "Domínio:", "Feature Set:", etc.
+      title = title.replace(TITLE_STRIP_RE, '').trim();
+      state.dirTitles[dir.path] = title;
+      // Atualiza o label já renderizado no DOM
+      const label = document.querySelector(`.tree-row[data-path="${dir.path}"] .tree-name`);
+      if (label) label.textContent = title;
+    } catch (_) { /* silencia */ }
+  }));
 }
 
 function getIcon(node) {
@@ -233,10 +314,10 @@ function renderNode(node, depth) {
   icon.textContent = getIcon(node);
   row.appendChild(icon);
 
-  // Nome
+  // Nome — usa alias ou título do README quando disponível
   const label = document.createElement('span');
   label.className = `tree-name${isDir ? ' tree-name-dir' : ''}`;
-  label.textContent = node.name;
+  label.textContent = getDisplayName(node);
   row.appendChild(label);
 
   item.appendChild(row);

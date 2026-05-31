@@ -360,6 +360,12 @@ body {
 }
 .skeleton-line.short { width: 60%; }
 
+/* Item fixo "Início" — separador inferior */
+.tree-row-pinned {
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 4px;
+}
+
 /* ── Sidebar collapse (mobile) ── */
 .sidebar-overlay {
   display: none;
