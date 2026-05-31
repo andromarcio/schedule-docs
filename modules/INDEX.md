@@ -1,6 +1,5 @@
-# Índice geral de módulos
+# Índice geral de módulos — CleanSched
 > Visão consolidada de todos os domínios do sistema.
-> Mantido via PROMPT 1A/1B — atualizar após cada N1 aprovado.
 
 ---
 
@@ -8,26 +7,31 @@
 
 | Domínio | Pasta | Responsabilidade | Feature Sets |
 |---|---|---|---|
-| [Nome] | `modules/[dominio]/` | [responsabilidade em uma frase] | [N] |
+| [Clientes e Imóveis](./clientes-imoveis/README.md) | `modules/clientes-imoveis/` | Cadastro e gestão de clientes e seus imóveis para limpeza | 2 |
+| [Equipe](./equipe/README.md) | `modules/equipe/` | Gestão de membros fixos, helpers e disponibilidade | 2 |
+| [Agendamento](./agendamento/README.md) | `modules/agendamento/` | Geração e gestão da agenda semanal de limpezas | 1 |
 
 ---
 
 ## Rastreabilidade: spec → código
 
-| Feature | Domínio | Status | PF | CFP | Repositórios |
-|---|---|---|---|---|---|
-| [Feature] | [Domínio] | 📋 Especificado | [N] | [N] | — |
-| [Feature] | [Domínio] | 🔄 Em desenvolvimento | [N] | [N] | [repo] |
-| [Feature] | [Domínio] | ✅ Implementado | [N] | [N] | [repo1], [repo2] |
-| [Feature] | [Domínio] | ⚠️ Revisão necessária | [N] | [N] | [repo] |
-| [Feature] | [Domínio] | ❌ Deprecado | — | — | — |
+| Feature | Domínio | Status | PF | Repositórios |
+|---|---|---|---|---|
+| Cadastrar Cliente | Clientes e Imóveis | 📋 Especificado | 4 | — |
+| Editar Cliente | Clientes e Imóveis | 📋 Especificado | 3 | — |
+| Inativar Cliente | Clientes e Imóveis | 📋 Especificado | 3 | — |
+| Cadastrar Imóvel | Clientes e Imóveis | 📋 Especificado | 4 | — |
+| Editar Imóvel | Clientes e Imóveis | 📋 Especificado | 3 | — |
+| Inativar Imóvel | Clientes e Imóveis | 📋 Especificado | 3 | — |
+| Cadastrar Membro | Equipe | 📋 Especificado | 4 | — |
+| Registrar Disponibilidade | Equipe | 📋 Especificado | 4 | — |
+| Inativar Membro | Equipe | 📋 Especificado | 3 | — |
+| Cadastrar Helper | Equipe | 📋 Especificado | 3 | — |
+| Gerar Agenda | Agendamento | 📋 Especificado | 6 | — |
+| Atribuir Equipe | Agendamento | 📋 Especificado | 5 | — |
+| Visualizar Agenda | Agendamento | 📋 Especificado | 4 | — |
 
-<!--
-  PF e CFP: preencher após PROMPT_3B. Ver critérios em global/SIZING.md.
-  Totais vigentes excluem features ❌ Deprecadas.
--->
-
-**Total vigente: [N] PF · [N] CFP**
+**Total vigente: 49 PF**
 
 ---
 
@@ -35,7 +39,13 @@
 
 | Entidade | Domínio | N1 de origem |
 |---|---|---|
-| [Entidade] | [Domínio] | [link para README.md do domínio] |
+| Cliente | Clientes e Imóveis | [clientes-imoveis/README.md](./clientes-imoveis/README.md) |
+| Imóvel | Clientes e Imóveis | [clientes-imoveis/README.md](./clientes-imoveis/README.md) |
+| Membro da Equipe | Equipe | [equipe/README.md](./equipe/README.md) |
+| Disponibilidade | Equipe | [equipe/README.md](./equipe/README.md) |
+| Agenda Semanal | Agendamento | [agendamento/README.md](./agendamento/README.md) |
+| Item de Agenda | Agendamento | [agendamento/README.md](./agendamento/README.md) |
+| Membro do Item de Agenda | Agendamento | [agendamento/README.md](./agendamento/README.md) |
 
 ---
 
@@ -43,7 +53,10 @@
 
 | Evento | Publicado por | Consumido por | Payload principal |
 |---|---|---|---|
-| `[entidade.acao]` | [Domínio/Feature] | [Domínio/Feature] | [campos] |
+| `imovel.inativado` | Clientes e Imóveis | Agendamento | `{ propertyId }` |
+| `cliente.inativado` | Clientes e Imóveis | Clientes e Imóveis (cascata de imóveis) | `{ clientId }` |
+| `agenda.confirmada` | Agendamento | Clientes e Imóveis (atualiza lastCleanedAt) | `{ scheduleId, items[] }` |
+| `disponibilidade.registrada` | Equipe | Agendamento | `{ memberId, date, available }` |
 
 ---
 
@@ -51,7 +64,11 @@
 
 | Domínio origem | Depende de | Tipo | Descrição |
 |---|---|---|---|
-| [Domínio] | [Domínio] | Leitura / Escrita / Evento | [descrição] |
+| Agendamento | Clientes e Imóveis | Leitura | Lê imóveis ativos e frequências para gerar agenda |
+| Agendamento | Equipe | Leitura | Lê membros ativos e disponibilidades para sugerir atribuição |
+| Agendamento | Clientes e Imóveis | Escrita (via evento) | Atualiza `lastCleanedAt` ao confirmar agenda |
+| Clientes e Imóveis | — | — | Domínio sem dependências externas |
+| Equipe | — | — | Domínio sem dependências externas |
 
 ---
 

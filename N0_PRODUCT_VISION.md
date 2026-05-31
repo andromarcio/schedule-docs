@@ -12,66 +12,67 @@
 
 ## 1. Propósito geral do sistema
 
-[Descreva em 1 ou 2 parágrafos qual é o objetivo central do sistema.
-Qual problema ele resolve e qual valor ele entrega ao usuário final?]
+**CleanSched** é um sistema de gestão operacional para pequenos negócios de limpeza residencial. Ele permite que a gestora cadastre os imóveis dos clientes, organize sua equipe e gere a agenda semanal de limpezas de forma rápida e sem papel.
+
+O sistema resolve dois problemas centrais: (1) saber quais imóveis precisam ser limpos em cada semana, respeitando a frequência contratada de cada cliente; e (2) definir quais membros da equipe vão a cada imóvel, considerando disponibilidade e possível necessidade de contratação de helpers avulsos.
 
 ---
 
 ## 2. Personas e usuários principais
 
-Descreva os principais perfis de usuários que interagem com o sistema,
-suas necessidades e restrições.
+### Gerente — a dona do negócio
+- **Perfil**: Empreendedora individual; opera o negócio de limpeza; usa principalmente o celular; não tem perfil técnico.
+- **Objetivos principais**: Cadastrar e manter os imóveis dos clientes; gerar a agenda toda semana; saber rapidamente quem vai a qual casa; controlar a disponibilidade da equipe.
+- **Dores / Desafios**: Hoje faz tudo no WhatsApp e em anotações físicas; perde tempo confirmando disponibilidade de cada membro; esquece qual casa é mensal ou quinzenal.
 
-### [Nome da Persona 1 — ex: Administrador do Sistema]
-- **Perfil**: [descrição breve — cargo, contexto, nível técnico]
-- **Objetivos principais**: [o que essa persona tenta realizar no sistema]
-- **Dores / Desafios**: [quais problemas enfrenta que o sistema deve aliviar]
+### Membro da equipe
+- **Perfil**: Funcionária fixa; acessa o sistema no celular; não cria nem edita agendas.
+- **Objetivos principais**: Ver sua agenda da semana; informar quando não pode trabalhar em determinada data.
+- **Dores / Desafios**: Recebe a agenda pelo WhatsApp em texto; não tem visão clara dos dias e casas que vai atender.
 
-### [Nome da Persona 2 — ex: Cliente Final]
-- **Perfil**: [descrição breve]
-- **Objetivos principais**: [o que essa persona tenta realizar]
-- **Dores / Desafios**: [quais problemas enfrenta]
-
-### [Nome da Persona 3 — ex: Analista / Operador]
-- **Perfil**: [descrição breve]
-- **Objetivos principais**: [o que essa persona tenta realizar]
-- **Dores / Desafios**: [quais problemas enfrenta]
+### Helper (contratada avulsa)
+- **Perfil**: Profissional autônoma contratada pontualmente quando um membro fixo está indisponível.
+- **Objetivos principais**: Receber as informações do trabalho do dia (endereço, horário).
+- **Dores / Desafios**: Recebe orientações apenas via WhatsApp; não acessa o sistema diretamente.
 
 ---
 
 ## 3. Métricas de sucesso (KPIs)
 
-Liste como o sucesso das funcionalidades será medido.
-
 | Métrica | Meta | Como medir |
 |---|---|---|
-| [ex: Redução no tempo de resposta do suporte] | [ex: 20% em 6 meses] | [ex: relatório mensal de tickets] |
-| [ex: Taxa de conversão de leads] | [ex: 15% acima do atual] | [ex: dashboard de captação] |
+| Tempo para gerar agenda semanal | Reduzir de ~40 min para menos de 10 min | Relato da gestora |
+| Agendas com conflito de disponibilidade | Zero agendas com membro indisponível atribuído | Contagem de retrabalho semanal |
+| Casas perdidas (esquecidas na agenda) | Zero imóveis ativos sem agendamento na frequência correta | Auditoria mensal |
+| Adoção pela equipe | 100% dos membros fixos registrando disponibilidade no app | % de disponibilidade preenchida via sistema vs WhatsApp |
 
 ---
 
 ## 4. Tom de voz e princípios de UX
 
-Quais são as diretrizes de comunicação do sistema?
-
 | Princípio | Descrição |
 |---|---|
-| [ex: Linguagem simples] | [A interface deve ser acessível, sem jargões técnicos] |
-| [ex: Tom prestativo em erros] | [Mensagens de erro devem ser calmas e orientativas, nunca acusatórias] |
-| [ex: Eficiência para usuários recorrentes] | [Fluxos frequentes devem ter atalhos e poucos cliques] |
+| Mobile-first, simples | A interface deve funcionar bem no celular com uma mão; sem menus complexos |
+| Linguagem do negócio | Usar termos que a gestora já usa: "casa P", "quinzenal", "helper"; nunca jargão técnico |
+| Velocidade na operação semanal | O fluxo de gerar e confirmar agenda deve ter no máximo 3 telas |
+| Feedback claro | Toda ação deve ter confirmação visual imediata; erros em português claro e orientativo |
+| Zero ambiguidade no agendamento | Data, membro e imóvel devem sempre aparecer juntos — nunca informação parcial |
 
 ---
 
 ## 5. Restrições e premissas globais
 
-[Liste restrições de negócio, regulatórias ou técnicas que impactam
-decisões de design do sistema como um todo.]
-
-- [ex: O sistema deve ser compatível com LGPD]
-- [ex: Nenhum dado sensível pode ser armazenado fora do Brasil]
-- [ex: O sistema deve funcionar offline para os módulos X e Y]
+- O sistema é **single-tenant**: uma única empresa, sem multitenancy.
+- O acesso é feito exclusivamente via **navegador mobile** (PWA instalável); não há app nativo.
+- Todos os dados são do território dos **Estados Unidos** — endereços e telefones no formato americano.
+- **Não há integração com sistemas de pagamento** — o faturamento é externo ao escopo.
+- A agenda semanal considera **segunda a sexta** como dias úteis de trabalho.
+- Um imóvel de **frequência mensal** é agendado na primeira semana de cada mês por padrão.
+- Um imóvel de **frequência quinzenal** alterna entre a 1ª e 3ª semana do mês.
+- O sistema deve funcionar com **conexão de internet intermitente** — ações críticas exibem erro claro quando offline.
+- **Soft delete** em todos os registros — nenhum dado é removido fisicamente.
+- **Notificações via WhatsApp** são geradas como texto copiável; não há integração automática com WhatsApp nesta versão.
 
 ---
 
-*Documento raiz do sistema — referenciar no MASTER.md e incluir nas
-sessões de criação de N1 e N2.*
+*Documento raiz do sistema — referenciar no MASTER.md e incluir nas sessões de criação de N1 e N2.*
