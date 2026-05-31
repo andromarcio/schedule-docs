@@ -637,6 +637,10 @@ body {
 .md-content tbody tr:hover { background: var(--surface-2); }
 
 /* Dev-only sections */
+body.hide-dev-only .md-content .dev-only {
+  display: none !important;
+}
+
 .md-content .dev-only {
   border: 1px solid var(--border);
   border-radius: var(--radius);

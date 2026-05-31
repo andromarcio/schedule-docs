@@ -126,6 +126,32 @@ formulário em página própria, modal, botão em listagem, etc.]
 
 ---
 
+## Métricas de tamanho
+
+<!--
+  Preencher após aprovação do N3 técnico (PROMPT_3B) e antes do início do desenvolvimento.
+  Responsável: Dev que especificou o N3. Revisão: Tech Lead do domínio.
+  Critérios de contagem: ver global/SIZING.md
+
+  IMPORTANTE — Arquitetura BFF (Java + Angular):
+  Endpoints internos (consumidos apenas pelo frontend do próprio sistema) NÃO são EE.
+  Para ser contado como EE, o endpoint deve estar exposto a sistemas além da
+  fronteira lógica do sistema (ex: API pública, integração com sistema externo).
+  Registrar aqui apenas Funções de Transação (EE, SE, CE).
+  Funções de Dados (ALI, AIE) são contadas centralmente no DATA-MODEL.md.
+-->
+
+| Função de Transação | Tipo | Complexidade | PF |
+|---|---|---|---|
+| [Nome da Feature] | [EE / SE / CE] | Baixa / Média / Alta | [3/4/5/6/7] |
+
+> Endpoints consumidos exclusivamente pelo frontend deste sistema (BFF interno) **não são contados**.
+> Ver critério completo em `global/SIZING.md`.
+
+**Total: [N] PF**
+
+---
+
 <div class="dev-only">
 
 ## Mapeamento de campos
@@ -239,32 +265,6 @@ logAction({
 - **[Lib/Serviço]** — [para que é usado]
 
 </div>
-
----
-
-## Métricas de tamanho
-
-<!--
-  Preencher após aprovação do N3 técnico (PROMPT_3B) e antes do início do desenvolvimento.
-  Responsável: Dev que especificou o N3. Revisão: Tech Lead do domínio.
-  Critérios de contagem: ver global/SIZING.md
-
-  IMPORTANTE — Arquitetura BFF (Java + Angular):
-  Endpoints internos (consumidos apenas pelo frontend do próprio sistema) NÃO são EE.
-  Para ser contado como EE, o endpoint deve estar exposto a sistemas além da
-  fronteira lógica do sistema (ex: API pública, integração com sistema externo).
-  Registrar aqui apenas Funções de Transação (EE, SE, CE).
-  Funções de Dados (ALI, AIE) são contadas centralmente no DATA-MODEL.md.
--->
-
-| Função de Transação | Tipo | Complexidade | PF |
-|---|---|---|---|
-| [Nome da Feature] | [EE / SE / CE] | Baixa / Média / Alta | [3/4/5/6/7] |
-
-> Endpoints consumidos exclusivamente pelo frontend deste sistema (BFF interno) **não são contados**.
-> Ver critério completo em `global/SIZING.md`.
-
-**Total: [N] PF**
 
 ---
 

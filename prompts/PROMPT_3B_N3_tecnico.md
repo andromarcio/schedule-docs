@@ -183,6 +183,7 @@ Após aprovação, gere o arquivo completo:
 ## Campos                            ← negocial (Label PO | Tipo | Obrig. | Validação)
 ## Campos automáticos                ← negocial (Label PO | Valor | Quando)
 ## Comportamento de tela             ← negocial
+## Métricas de tamanho               ← APF (sem COSMIC)
 
 <div class="dev-only">
 ## Mapeamento de campos              ← apenas: → ver DATA-MODEL.md: Entidade [Nome]
@@ -195,7 +196,6 @@ Após aprovação, gere o arquivo completo:
 ## Dependências                      ← técnico
 </div>
 
-## Métricas de tamanho               ← APF (sem COSMIC)
 ## Implementação                     ← rastreabilidade (preenchido após dev)
 ```
 

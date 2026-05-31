@@ -68,6 +68,7 @@ let state = {
   activeFile: null,
   sidebarOpen: true,
   theme:      localStorage.getItem('theme') || 'light',
+  showDev:    localStorage.getItem('showDev') !== 'false',
 };
 
 /* ═══════════════════════════════════════════════════════════════
@@ -75,6 +76,7 @@ let state = {
    ═══════════════════════════════════════════════════════════════ */
 async function init() {
   applyTheme(state.theme);
+  applyDevMode(state.showDev);
   document.getElementById('github-link').href = GITHUB_URL;
 
   // Carrega MASTER.md para obter nome do sistema
@@ -89,6 +91,7 @@ async function init() {
   // Listeners
   window.addEventListener('hashchange', handleHashChange);
   document.getElementById('theme-btn').addEventListener('click', toggleTheme);
+  document.getElementById('dev-toggle-btn').addEventListener('click', toggleDevMode);
   document.getElementById('sidebar-toggle').addEventListener('click', toggleSidebar);
   document.getElementById('sidebar-overlay').addEventListener('click', closeSidebarMobile);
   document.getElementById('search-input').addEventListener('input', onSearch);
@@ -751,6 +754,18 @@ function toggleTheme() {
   state.theme = state.theme === 'dark' ? 'light' : 'dark';
   localStorage.setItem('theme', state.theme);
   applyTheme(state.theme);
+}
+
+function applyDevMode(show) {
+  document.body.classList.toggle('hide-dev-only', !show);
+  const btn = document.getElementById('dev-toggle-btn');
+  if (btn) btn.style.opacity = show ? '1' : '0.5';
+}
+
+function toggleDevMode() {
+  state.showDev = !state.showDev;
+  localStorage.setItem('showDev', state.showDev);
+  applyDevMode(state.showDev);
 }
 
 /* ═══════════════════════════════════════════════════════════════
