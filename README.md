@@ -1,13 +1,5 @@
 # Visão Estratégica de Produto
-> **Nível 0** — Documento raiz do sistema
->
-> **Objetivo**: prover contexto de negócio, perfil dos usuários e métricas
-> de sucesso para balizar as inferências feitas pelo LLM durante as sessões
-> de especificação de N1, N2 e N3.
->
-> **Quando usar**: incluir este arquivo (ou seu conteúdo) sempre que iniciar
-> a concepção de um novo Domínio (N1) ou Feature Set (N2).
-
+> **Objetivo**: prover contexto de negócio, perfil dos usuários e métricas de sucesso para balizar as inferências feitas pelo LLM durante as sessões de especificação de N1, N2 e N3.
 ---
 
 ## 1. Propósito geral do sistema
