@@ -152,9 +152,10 @@ function isHidden(path) {
 /* Verifica se um nó deve ser ocultado apenas do menu lateral.
    Fica no treeMap para que a navegação por clique no diretório funcione. */
 function isHiddenFromMenu(node) {
-  // README.md dentro de modules/ — abre automaticamente ao clicar no dir pai
-  return node.path.startsWith('modules/') &&
-         node.name.toLowerCase() === 'readme.md';
+  if (!node.path.startsWith('modules/')) return false;
+  const name = node.name.toLowerCase();
+  // README.md e INDEX.md dentro de modules/ — abertos automaticamente ao clicar no dir pai
+  return name === 'readme.md' || name === 'index.md';
 }
 
 /* ═══════════════════════════════════════════════════════════════
@@ -375,6 +376,11 @@ function renderNode(node, depth) {
 
     if (!isDir) {
       navigateTo(node.path);
+    } else if (node.path === 'modules') {
+      // "Módulos" → exibe o INDEX.md da raiz de modules/
+      const indexPath = 'modules/INDEX.md';
+      if (state.treeMap[indexPath]) navigateTo(indexPath);
+      else navigateTo(node.path, true);
     } else {
       // Dirs dentro de modules/ com README.md → exibe o README diretamente
       const readmePath = `${node.path}/README.md`;
