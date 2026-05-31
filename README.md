@@ -1,4 +1,4 @@
-# N0 — Visão Estratégica de Produto
+# Visão Estratégica de Produto
 > **Nível 0** — Documento raiz do sistema
 >
 > **Objetivo**: prover contexto de negócio, perfil dos usuários e métricas
