@@ -343,16 +343,37 @@ function renderNode(node, depth) {
     item.appendChild(childrenEl);
   }
 
-  // Clique
-  row.addEventListener('click', () => {
+  /* ── helper: abre/fecha a árvore ── */
+  function toggleTree(e) {
+    if (e) e.stopPropagation();
     if (isDir && hasChildren && childrenEl) {
       const open = childrenEl.classList.toggle('open');
       chev.classList.toggle('open', open);
     }
+  }
+
+  /* ── 1. Clique no chevron: apenas expande/colapsa ── */
+  chev.addEventListener('click', toggleTree);
+
+  /* ── 2. Duplo clique na linha: expande/colapsa ── */
+  row.addEventListener('dblclick', toggleTree);
+
+  /* ── 3. Clique simples na linha: navega (sem abrir árvore) ── */
+  row.addEventListener('click', (e) => {
+    // Ignorar se veio do chevron (já tratado acima)
+    if (e.target === chev || chev.contains(e.target)) return;
+
     if (!isDir) {
       navigateTo(node.path);
     } else {
-      navigateTo(node.path, true);
+      // Dirs dentro de modules/ com README.md → exibe o README diretamente
+      const readmePath = `${node.path}/README.md`;
+      if (isInsideModules(node.path) && state.treeMap[readmePath]) {
+        navigateTo(readmePath);
+      } else {
+        // Demais dirs → listagem normal
+        navigateTo(node.path, true);
+      }
     }
   });
 

@@ -312,18 +312,25 @@ body {
 
 .tree-indent { flex-shrink: 0; }
 .tree-chevron {
-  width: 20px;
-  height: 20px;
+  width: 24px;
+  height: 32px;          /* mesma altura da linha para área de clique confortável */
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
   color: var(--text-3);
   font-size: 10px;
-  transition: transform var(--transition);
+  transition: transform var(--transition), color var(--transition);
+  cursor: pointer;
+  border-radius: var(--radius-sm);
+  z-index: 1;            /* garante que fica acima do hover da linha */
+}
+.tree-chevron:hover:not(.leaf) {
+  color: var(--primary);
+  background: var(--primary-bg);
 }
 .tree-chevron.open { transform: rotate(90deg); }
-.tree-chevron.leaf { visibility: hidden; }
+.tree-chevron.leaf { visibility: hidden; cursor: default; }
 
 .tree-icon {
   font-size: 14px;
