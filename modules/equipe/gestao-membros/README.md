@@ -12,6 +12,7 @@ Permite à gerente cadastrar e manter os dados das membros fixas da equipe, bem 
 
 | Feature | Arquivo | Descrição |
 |---|---|---|
+| Listar Membros | [listar-membros.md](./listar-membros.md) | Exibe lista de membros com busca por nome e filtro por status |
 | Cadastrar Membro | [cadastrar-membro.md](./cadastrar-membro.md) | Registra nova membro fixa da equipe |
 | Registrar Disponibilidade | [registrar-disponibilidade.md](./registrar-disponibilidade.md) | Informa se a membro estará disponível ou não em uma data específica |
 | Inativar Membro | [inativar-membro.md](./inativar-membro.md) | Marca a membro como inativa, preservando histórico |

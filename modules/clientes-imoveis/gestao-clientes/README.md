@@ -12,6 +12,7 @@ Permite à gerente cadastrar, atualizar e inativar os clientes — as pessoas re
 
 | Feature | Arquivo | Descrição |
 |---|---|---|
+| Listar Clientes | [listar-clientes.md](./listar-clientes.md) | Exibe lista de clientes com busca por nome e filtro por status |
 | Cadastrar Cliente | [cadastrar-cliente.md](./cadastrar-cliente.md) | Registra um novo cliente com nome e telefone |
 | Editar Cliente | [editar-cliente.md](./editar-cliente.md) | Atualiza os dados de um cliente existente |
 | Inativar Cliente | [inativar-cliente.md](./inativar-cliente.md) | Marca o cliente como inativo, inativando seus imóveis em cascata |

@@ -12,6 +12,7 @@ Permite à gerente cadastrar, atualizar e inativar os imóveis que serão atendi
 
 | Feature | Arquivo | Descrição |
 |---|---|---|
+| Listar Imóveis | [listar-imoveis.md](./listar-imoveis.md) | Exibe lista de imóveis com filtros por cliente, frequência e status |
 | Cadastrar Imóvel | [cadastrar-imovel.md](./cadastrar-imovel.md) | Registra novo imóvel vinculado a um cliente com endereço, tamanho e frequência |
 | Editar Imóvel | [editar-imovel.md](./editar-imovel.md) | Atualiza dados de um imóvel existente |
 | Inativar Imóvel | [inativar-imovel.md](./inativar-imovel.md) | Marca o imóvel como inativo, excluindo-o das futuras gerações de agenda |

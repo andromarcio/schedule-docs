@@ -12,6 +12,7 @@ Permite à gerente cadastrar helpers — profissionais autônomas contratadas de
 
 | Feature | Arquivo | Descrição |
 |---|---|---|
+| Listar Helpers | [listar-helpers.md](./listar-helpers.md) | Exibe lista de helpers com busca por nome e filtro por status |
 | Cadastrar Helper | [cadastrar-helper.md](./cadastrar-helper.md) | Registra uma helper avulsa com nome e telefone de contato |
 
 ---
