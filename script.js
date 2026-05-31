@@ -11,6 +11,15 @@ const RAW_BASE     = `https://raw.githubusercontent.com/${REPO_OWNER}/${REPO_NAM
 const API_BASE     = `https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}`;
 const GITHUB_URL   = `https://github.com/${REPO_OWNER}/${REPO_NAME}`;
 
+/* URL base para arquivos estáticos servidos pelo GitHub Pages (ou localhost).
+   Usado em iframes — raw.githubusercontent.com bloqueia embed via X-Frame-Options. */
+const PAGES_BASE = (() => {
+  const { origin, pathname } = window.location;
+  return (origin + pathname)
+    .replace(/\/index\.html$/, '')
+    .replace(/\/$/, '');
+})();
+
 /* ── Filtros ── */
 const HIDDEN_DIRS  = new Set(['prompts', '.github', '.git', '.claude', 'node_modules']);
 const HIDDEN_PREFIX = '_template';
@@ -603,8 +612,8 @@ function showHtmlFile(filePath) {
         <button class="proto-preview-btn" onclick="openProto('${filePath}', '${name}')">
           🔲 Abrir Protótipo
         </button>
-        <a href="${ghUrl}" target="_blank" class="proto-preview-btn" style="background:var(--primary-bg);color:var(--primary);border-color:var(--primary)">
-          ↗ Ver no GitHub
+        <a href="${PAGES_BASE}/${filePath}" target="_blank" class="proto-preview-btn" style="background:var(--primary-bg);color:var(--primary);border-color:var(--primary)">
+          ↗ Abrir em nova aba
         </a>
       </div>
     </div>
@@ -616,10 +625,10 @@ function showHtmlFile(filePath) {
         <span style="font-size:11px;color:var(--text-3);margin-left:8px">${filePath}</span>
       </div>
       <iframe
-        src="${RAW_BASE}/${filePath}"
+        src="${PAGES_BASE}/${filePath}"
         style="width:100%;height:680px;border:none;display:block"
         title="${name}"
-        sandbox="allow-scripts allow-same-origin"
+        sandbox="allow-scripts allow-same-origin allow-forms"
       ></iframe>
     </div>
   `;
@@ -673,9 +682,9 @@ function openProto(filePath, title) {
   const titleEl  = document.getElementById('proto-modal-title');
   const openLink = document.getElementById('proto-open-link');
 
-  frame.src = `${RAW_BASE}/${filePath}`;
+  frame.src = `${PAGES_BASE}/${filePath}`;
   titleEl.textContent = `🔲 ${title}`;
-  openLink.href = `${RAW_BASE}/${filePath}`;
+  openLink.href = `${PAGES_BASE}/${filePath}`;
 
   modal.classList.add('open');
   backdrop.classList.add('open');
