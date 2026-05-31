@@ -141,12 +141,20 @@ async function loadTree() {
   }
 }
 
-/* Verifica se um path deve ser ocultado */
+/* Verifica se um path deve ser ocultado completamente (não entra no treeMap) */
 function isHidden(path) {
   const parts = path.split('/');
   return parts.some(p =>
     HIDDEN_DIRS.has(p) || p.startsWith(HIDDEN_PREFIX) || p.startsWith('.')
   );
+}
+
+/* Verifica se um nó deve ser ocultado apenas do menu lateral.
+   Fica no treeMap para que a navegação por clique no diretório funcione. */
+function isHiddenFromMenu(node) {
+  // README.md dentro de modules/ — abre automaticamente ao clicar no dir pai
+  return node.path.startsWith('modules/') &&
+         node.name.toLowerCase() === 'readme.md';
 }
 
 /* ═══════════════════════════════════════════════════════════════
@@ -290,7 +298,9 @@ function getIcon(node) {
 
 function renderNode(node, depth) {
   const isDir = node.type === 'tree';
-  const children = isDir ? Object.values(node.children || {}).sort(sortNodes) : [];
+  const children = isDir
+    ? Object.values(node.children || {}).filter(c => !isHiddenFromMenu(c)).sort(sortNodes)
+    : [];
   const hasChildren = children.length > 0;
 
   const item = document.createElement('div');
