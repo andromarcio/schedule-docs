@@ -1,0 +1,132 @@
+name: Release do Sistema
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Versao a lancar (ex: 1.3.0). Deixe vazio para auto-incrementar patch."
+        required: false
+        type: string
+      release_notes:
+        description: "Notas de release. Suporta markdown."
+        required: true
+        type: string
+
+jobs:
+  prepare:
+    name: Preparar versao
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    outputs:
+      version: ${{ steps.resolve.outputs.version }}
+      tag:     ${{ steps.resolve.outputs.tag }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.RELEASE_PAT }}
+      - name: Resolver versao
+        id: resolve
+        env:
+          INPUT_VERSION: ${{ github.event.inputs.version }}
+        run: |
+          if [[ -n "$INPUT_VERSION" ]]; then
+            VERSION="${INPUT_VERSION#v}"
+          else
+            LATEST=$(git tag -l 'v*' --sort=-version:refname | head -n1)
+            LATEST="${LATEST:-v0.0.0}"
+            IFS='.' read -ra P <<< "${LATEST#v}"
+            PATCH=$(( ${P[2]} + 1 ))
+            VERSION="${P[0]}.${P[1]}.${PATCH}"
+          fi
+          if [[ ! "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then echo "Formato invalido"; exit 1; fi
+          if git rev-parse "v$VERSION" >/dev/null 2>&1; then echo "Tag ja existe"; exit 1; fi
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "tag=v$VERSION" >> $GITHUB_OUTPUT
+
+  release-docs:
+    name: Release no repo de docs
+    needs: prepare
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.RELEASE_PAT }}
+      - name: Configurar Git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+      - name: Atualizar CHANGELOG
+        env:
+          VERSION: ${{ needs.prepare.outputs.version }}
+          RELEASE_NOTES: ${{ github.event.inputs.release_notes }}
+        run: |
+          DATE=$(date +%Y-%m-%d)
+          if [[ -f "changelogs/CHANGELOG-sistema.md" ]]; then
+            awk -v ver="[${VERSION}] - ${DATE}" -v notes="${RELEASE_NOTES}" \
+              'NR==1{print; print ""; print "## "ver; print ""; print notes; print ""; next}{print}' \
+              changelogs/CHANGELOG-sistema.md > /tmp/cl.tmp
+            mv /tmp/cl.tmp changelogs/CHANGELOG-sistema.md
+          else
+            mkdir -p changelogs
+            printf "# Changelog do Sistema\n\n## [${VERSION}] - ${DATE}\n\n${RELEASE_NOTES}\n" > changelogs/CHANGELOG-sistema.md
+          fi
+      - name: Commit e tag
+        env:
+          TAG: ${{ needs.prepare.outputs.tag }}
+        run: |
+          git add changelogs/CHANGELOG-sistema.md
+          git diff --cached --quiet || git commit -m "chore: release ${TAG}"
+          git tag -a "${TAG}" -m "Release ${TAG}"
+          git push origin HEAD
+          git push origin "${TAG}"
+      - name: GitHub Release
+        env:
+          GH_TOKEN: ${{ secrets.RELEASE_PAT }}
+          TAG: ${{ needs.prepare.outputs.tag }}
+          NOTES: ${{ github.event.inputs.release_notes }}
+        run: gh release create "${TAG}" --title "Release ${TAG}" --notes "${NOTES}"
+
+  dispatch-repos:
+    name: Disparar release nos repos de codigo
+    needs: [prepare, release-docs]
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        # ⬇ EDITE com os repos reais do seu sistema
+        repo:
+          - minha-org/meu-projeto-backend
+          - minha-org/meu-projeto-frontend
+    steps:
+      - name: Dispatch em ${{ matrix.repo }}
+        env:
+          GH_TOKEN: ${{ secrets.RELEASE_PAT }}
+          TAG: ${{ needs.prepare.outputs.tag }}
+          NOTES: ${{ github.event.inputs.release_notes }}
+        run: |
+          gh api --method POST \
+            -H "Accept: application/vnd.github+json" \
+            /repos/${{ matrix.repo }}/dispatches \
+            -f event_type="system-release" \
+            -f client_payload[version]="${TAG}" \
+            -f client_payload[release_notes]="${NOTES}"
+
+  summary:
+    name: Sumario
+    needs: [prepare, release-docs, dispatch-repos]
+    runs-on: ubuntu-latest
+    if: always()
+    steps:
+      - name: Escrever sumario
+        env:
+          VERSION: ${{ needs.prepare.outputs.version }}
+        run: |
+          echo "## Release v${VERSION}" >> $GITHUB_STEP_SUMMARY
+          echo "| Etapa | Status |" >> $GITHUB_STEP_SUMMARY
+          echo "|-------|--------|" >> $GITHUB_STEP_SUMMARY
+          echo "| Docs  | ${{ needs.release-docs.result }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Repos | ${{ needs.dispatch-repos.result }} |" >> $GITHUB_STEP_SUMMARY

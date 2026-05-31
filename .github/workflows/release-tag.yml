@@ -1,0 +1,67 @@
+name: Release do Sistema (recebida do maestro)
+
+on:
+  repository_dispatch:
+    types: [system-release]
+
+jobs:
+  release:
+    name: Criar tag e GitHub Release
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.RELEASE_PAT }}
+
+      - name: Configurar Git
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+      - name: Validar payload recebido
+        env:
+          VERSION: ${{ github.event.client_payload.version }}
+        run: |
+          if [[ -z "$VERSION" ]]; then
+            echo "Payload invalido: campo 'version' nao recebido."
+            exit 1
+          fi
+          if [[ ! "$VERSION" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "Formato invalido: '$VERSION'. Esperado: vX.Y.Z"
+            exit 1
+          fi
+          if git rev-parse "$VERSION" >/dev/null 2>&1; then
+            echo "Tag $VERSION ja existe. Pulando."
+            exit 0
+          fi
+          echo "Versao validada: $VERSION"
+
+      - name: Criar e publicar tag
+        env:
+          VERSION: ${{ github.event.client_payload.version }}
+        run: |
+          git tag -a "${VERSION}" -m "Release ${VERSION} (sistema)"
+          git push origin "${VERSION}"
+          echo "Tag ${VERSION} criada e publicada."
+
+      - name: Criar GitHub Release
+        env:
+          GH_TOKEN: ${{ secrets.RELEASE_PAT }}
+          VERSION: ${{ github.event.client_payload.version }}
+          NOTES:   ${{ github.event.client_payload.release_notes }}
+        run: |
+          PREV_TAG=$(git tag -l 'v*' --sort=-version:refname | sed -n '2p')
+          if [[ -n "$PREV_TAG" ]]; then
+            COMMITS=$(git log --oneline "${PREV_TAG}..HEAD" --no-merges --pretty=format:"- %s" 2>/dev/null || echo "")
+          else
+            COMMITS="- Release inicial"
+          fi
+          BODY="## Notas de release\n\n${NOTES}\n\n## Commits desde ${PREV_TAG:-inicio}\n\n${COMMITS}"
+          gh release create "${VERSION}" \
+            --title "Release ${VERSION}" \
+            --notes "$(printf '%b' "$BODY")"
+          echo "GitHub Release ${VERSION} criada."
